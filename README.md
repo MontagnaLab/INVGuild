@@ -1,6 +1,7 @@
-![logo](logo.png)
+![WPm](WP_man.png) ...work in progress... ![WPw](WP_woman.png)
 
-# ...work in progress...
+
+![logo](logo.png)
 
 
 # INVGuild
