@@ -1,4 +1,8 @@
-![WPm](WP_man.png) ...work in progress... ![WPw](WP_woman.png)
+<p align="center">
+  <img src="WP_man.png" alt="WPm" width="80"/>
+  <span style="display:inline-block; margin: 0 10px; font-weight: bold;">...work in progress...</span>
+  <img src="WP_woman.png" alt="WPw" width="80"/>
+</p>
 
 
 ![logo](logo.png)
