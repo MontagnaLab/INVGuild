@@ -47,9 +47,12 @@ To ensure reliability:
 [tutorial](INVGuild_TrophicGuildAssignment.Rmd)
 
 
+
+
 ## Citation
 
 If you use INVGuild in your work, please cite the corresponding publication:
 
 > *In prep*.
 
+[Code for bioinformatic analysis of the paper](INVGuild_code_Bioinformatic_Pipeline.md)
