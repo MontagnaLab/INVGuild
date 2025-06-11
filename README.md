@@ -1,7 +1,7 @@
 <p align="center">
-  <img src="WP_man.png" alt="WPm" width="400"/>
+  <img src="WP_man.png" alt="WPm" width="300"/>
   <span style="display:inline-block; margin: 0 10px; font-weight: bold;">...work in progress...</span>
-  <img src="WP_woman.png" alt="WPw" width="400"/>
+  <img src="WP_woman.png" alt="WPw" width="300"/>
 </p>
 
 ---
