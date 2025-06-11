@@ -33,7 +33,7 @@ To ensure reliability:
   * 8 orders
   * 3 classes
 
-* **Including representatives of 21 invertebrate classes**, **76 orders**, **387 families**
+* Including representatives of **21 invertebrate classes**, **76 orders**, **387 families**
 * **585 bibliographic sources** support trophic assignments
 * For each entry besides the assigned **trophic guild** also the **taxonomic level of the assignment**, the **bibliographic references**, and some **ecological notes** are reported
 
