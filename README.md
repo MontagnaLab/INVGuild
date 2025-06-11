@@ -1,9 +1,10 @@
 <p align="center">
-  <img src="WP_man.png" alt="WPm" width="80"/>
+  <img src="WP_man.png" alt="WPm" width="400"/>
   <span style="display:inline-block; margin: 0 10px; font-weight: bold;">...work in progress...</span>
-  <img src="WP_woman.png" alt="WPw" width="80"/>
+  <img src="WP_woman.png" alt="WPw" width="400"/>
 </p>
 
+---
 
 ![logo](logo.png)
 
@@ -43,7 +44,7 @@ To ensure reliability:
 * For each entry besides the assigned **trophic guild** also the **taxonomic level of the assignment**, the **bibliographic references**, and some **ecological notes** are reported
 
 ## How to use INVGuild
-*...working progress...*
+*...work in progress...*
 
 ## Citation
 
