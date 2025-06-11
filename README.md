@@ -32,7 +32,7 @@ To ensure reliability:
 
 ## Database Contents
 
-* **973 taxonomic entries (out of a total of 1,386) with functional assignment**
+* **973 taxonomic entries with functional assignment (out of a total of 1,386)**
   * 659 species
   * 232 genera
   * 71 families
