@@ -1,5 +1,3 @@
-# INVGuild
-
 ![logo](logo.png)
 
-...work in progress...
+# ...work in progress...
