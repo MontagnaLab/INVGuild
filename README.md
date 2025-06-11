@@ -44,7 +44,7 @@ To ensure reliability:
 * For each entry besides the assigned **trophic guild** also the **taxonomic level of the assignment**, the **bibliographic references**, and some **ecological notes** are reported
 
 ## How to use INVGuild
-[tutorial](docs/INVGuild_TrophicGuildAssignment.html)
+[tutorial](INVGuild_TrophicGuildAssignment.Rmd)
 
 
 ## Citation
