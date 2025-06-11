@@ -17,7 +17,7 @@
 
 Understanding ecosystem functioning requires more than just knowing which species are present, it requires insight into what roles those species play. Traditional taxonomic diversity metrics often fall short in capturing ecological dynamics. Functional diversity, by contrast, reflects ecological processes more directly. However, assigning functional roles (e.g., feeding strategies) to invertebrates in large-scale surveys is notoriously difficult.
 
-**INVGuild bridges this gap** by offering a curated and structured database to assign invertebrate taxa to one of seven trophic guilds (bacterivores, carnivores, detritivores, fungivores, herbivores, microbivores, omnivores), making functional analysis accessible and scalable for ecological studies and biodiversity monitoring efforts.
+**INVGuild** bridges this gap by offering a **curated and structured database to assign invertebrate taxa to one of seven trophic guilds (bacterivores, carnivores, detritivores, fungivores, herbivores, microbivores, omnivores)**, making functional analysis accessible and scalable for ecological studies and biodiversity monitoring efforts.
 
 ## Scope and Development
 
