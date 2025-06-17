@@ -450,14 +450,14 @@ badIDs &lt;- CleanData %&gt;%
 # View unique genera
 print(sort(badIDs))
 
-### remove also genera bad IDs ###
+### remove also genera wrong IDs ###
 CleanData2 &lt;- CleanData %&gt;%
   mutate(
     Taxon = case_when(
       # If the first letter after &quot;g__&quot; is lowercase, remove everything after &quot;g__&quot; and keep &quot;s__&quot;
       str_detect(Taxon, &quot;g__[a-z]&quot;) ~ str_replace(Taxon, &quot;g__[a-z].*s__&quot;, &quot;g__; s__&quot;),
       
-      # Otherwise, leave the string as is
+      # Otherwise, leave the string as it is
       TRUE ~ Taxon
     )
   )
@@ -484,7 +484,7 @@ qiime rescript filter-seqs-length-by-taxon \
   --o-filtered-seqs silva-138.1-ssu-nr99-seqs-filt.qza \
   --o-discarded-seqs silva-138.1-ssu-nr99-seqs-discard.qza 
 
-# dereplicate sequences only if they have the same taxonomic id
+# dereplicate sequences only if they have the same taxonomic ID
 qiime rescript dereplicate \
   --i-sequences silva-138.1-ssu-nr99-seqs-filt.qza  \
   --i-taxa silva-138.1-ssu-nr99-tax-cleaned.qza \
@@ -577,8 +577,8 @@ qiime demux summarize \
 <hr />
 </div>
 </div>
-<div id="denoising-and-sequences-re-orientation" class="section level2">
-<h2><strong>5. Denoising and sequences re-orientation</strong></h2>
+<div id="denoising-and-sequence-re-orientation" class="section level2">
+<h2><strong>5. Denoising and sequence re-orientation</strong></h2>
 <p>Since barcodes and adapters were added after PCR amplification each
 fastq file contained both forward and reverse reads. So sequences were
 re-orientered using the reference database as guide.</p>
