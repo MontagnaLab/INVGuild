@@ -21,7 +21,7 @@ Understanding ecosystem functioning requires more than just knowing which specie
 
 ## Scope and Development
 
-The INVGuild database was built with a focus on European terrestrial invertebrates identified in large-scale soil biodiversity assessments, particularly those using eDNA metabarcoding. Soil samples are ideal for biodiversity studies, as they capture DNA from a wide range of organisms across trophic levels and habitats.
+The INVGuild database was developed from a curated list of terrestrial invertebrates identified in large-scale soil biodiversity studies.
 
 To ensure reliability:
 
@@ -32,7 +32,7 @@ To ensure reliability:
 
 ## Database Contents
 
-* **973 taxonomic entries with functional assignment (out of a total of 1,386)**
+* **973 taxonomic entries with functional assignment**
   * 659 species
   * 232 genera
   * 71 families
