@@ -65,7 +65,7 @@ for (i in 2:length(db_list)) {
 }
 ```
 
-## **Assign Ecological Guilds**
+## **Assign Trophic Guilds**
 
 ```{r}
 Assigned <- list()
@@ -150,7 +150,7 @@ lbls <- c(
   paste0("class\n\n(n=", sum(Assigned_df$AssignmentLevel == "Class"), ")")
 )
 
-# Barplots showing the relative abundance of trophic guilds identified in the full dataset (on the left) and per taxonomic level (on the)
+# Barplots showing the relative abundance of trophic guilds identified in the full dataset (on the left) and per taxonomic level (on the right)
 ggarrange(
   ggplot(SumTab_long, aes(x = All, y = Count, fill = Ecology)) +
     geom_bar(position="fill", stat = "identity") +
