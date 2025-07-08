@@ -37,7 +37,8 @@ To ensure reliability:
 
 ## How to use INVGuild
 [tutorial (html version)](https://montagnalab.github.io/INVGuild/docs/INVGuild_TrophicGuildAssignment.html)
-[tutorial](INVGuild_TrophicGuildAssignment.Rmd)
+
+[tutorial (Rmd version)](INVGuild_TrophicGuildAssignment.Rmd)
 
 ## Citation
 
