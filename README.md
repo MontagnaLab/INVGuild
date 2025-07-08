@@ -1,13 +1,5 @@
-<p align="center">
-  <img src="WP_man.png" alt="WPm" width="300"/>
-  <span style="display:inline-block; margin: 0 10px; font-weight: bold;">...work in progress...</span>
-  <img src="WP_woman.png" alt="WPw" width="300"/>
-</p>
 
----
-
-![logo](logo.png)
-
+<img src="logo.png" alt="logo" />
 
 # INVGuild
 
@@ -44,15 +36,13 @@ To ensure reliability:
 * For each entry besides the assigned **trophic guild** also the **taxonomic level of the assignment**, the **bibliographic references**, and some **ecological notes** are reported
 
 ## How to use INVGuild
+
 [tutorial](INVGuild_TrophicGuildAssignment.Rmd)
-
-
-
 
 ## Citation
 
 If you use INVGuild in your work, please cite the corresponding publication:
 
-> *In prep*.
+> *In evaluation*.
 
 [Code for bioinformatic analysis of the paper](INVGuild_code_Bioinformatic_Pipeline.md)
