@@ -36,7 +36,7 @@ To ensure reliability:
 * For each entry besides the assigned **trophic guild** also the **taxonomic level of the assignment**, the **bibliographic references**, and some **ecological notes** are reported
 
 ## How to use INVGuild
-[tutorial (html version)](https://montagnalab.github.io/INVGuild/docs/INVGuild_TrophicGuildAssignment.html)
+[tutorial (html version)](https://montagnalab.github.io/INVGuild/INVGuild_TrophicGuildAssignment.html)
 
 [tutorial (Rmd version)](INVGuild_TrophicGuildAssignment.Rmd)
 
