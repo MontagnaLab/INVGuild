@@ -1,4 +1,4 @@
-"Taxon"	"NCBI_taxid"	"Synonyms"	"Taxonomic.level"	"Ecology"	"Diet_varies_by_lifestage"	"Other information"	"References"
+"Taxon"	"NCBI_taxid"	"Synonyms"	"Taxonomic_level"	"Ecology"	"Diet_varies_by_lifestage"	"Other information"	"References"
 "k__Metazoa;p__Platyhelminthes;c__Rhabditophora;o__Tricladida"	6159		"Order"	"Carnivores"	"No"		"Prasniski, M.E., Leal-Zanchet, A.M., 2009. Predatory behavior of the land flatworm Notogynaphallia abundans (Platyhelminthes: Tricladida). Zoologia (Curitiba Impresso) 26(4), 606-612."
 "k__Metazoa;p__Platyhelminthes;c__Rhabditophora;o__Lecithoepitheliata;f__Prorhynchidae;g__Geocentrophora"	6171		"Genus"	"Detritivores"	"No"		"Adl, S.M., Ruiz‐Trillo, I., Wilson, M.L., 2006. Observations on a Geocentrophora sp. (Lecithoepitheliata) flatworm from forest soils in Nova Scotia. Journal of Natural History 40(23–24), 1381–1387. https://doi.org/10.1080/00222930600929285"
 "k__Metazoa;p__Nematoda;c__Chromadorea;o__Rhabditida"	6236	"Strongylida"	"NA"	"NA"	"NA"	"Different feeding habits within the order"	
