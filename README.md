@@ -24,16 +24,16 @@ To ensure reliability:
 
 ## Database Contents
 
-* **973 taxonomic entries with functional assignment**
-  * 659 species
-  * 232 genera
+* **964 taxonomic entries with functional assignment**
+  * 649 species
+  * 233 genera
   * 71 families
   * 8 orders
   * 3 classes
 
 * Including representatives of **21 invertebrate classes**, **76 orders**, **387 families**
 * **585 bibliographic sources** support trophic assignments
-* For each entry besides the assigned **trophic guild** also the **taxonomic level of the assignment**, the **bibliographic references**, and some **ecological notes** are reported
+* For each entry besides the assigned **trophic guild** also the **NCBI taxonomy ID**, the **synonyms**, the **taxonomic level of the assignment**, the **bibliographic references**, and some **ecological notes** are reported.
 
 ## How to use INVGuild
 [tutorial (html version)](https://MontagnaLab.github.io/INVGuild/INVGuild_TrophicGuildAssignment.html)
