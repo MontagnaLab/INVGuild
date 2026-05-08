@@ -1,0 +1,205 @@
+---
+title: "**Guild Assignment With INVGuild**"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: readable
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## **Load Required Libraries**
+
+```{r}
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(ggplot2)
+library(ggpubr)
+```
+
+## **Read Input Files**
+
+Two input files are required:
+
+* the file containing the [INVGuild](https://github.com/MontagnaLab/INVGuild/) database ([*INVGuild.tsv*](https://github.com/MontagnaLab/INVGuild/blob/main/data/INVGuild.tsv)).
+* the file containing the list of invertebrate taxa (formatted like [SILVA](https://www.arb-silva.de/)) to be assigned to a trophic guild in a column named "Taxon". In this case we use the file [*Taxonomy_LUCAS_Metazoa.tsv*](https://github.com/MontagnaLab/INVGuild/blob/main/data/Taxonomy_LUCAS_Metazoa.tsv), that contains the list of invertebrate taxa obtained in the [INVGuild paper](https://www.XXX.xx/) reanalysing the [LUCAS dataset](https://doi.org/10.1111/gcb.16871).
+
+```{r}
+db <- read.csv("data/INVGuild.tsv", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+tax <- read.csv("data/Taxonomy_LUCAS_Metazoa.tsv", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+```
+
+## **Helper Function and Variables**
+
+```{r}
+extract_tax_level <- function(df, level_prefix) {
+  pattern <- paste0(level_prefix, "__[^;]+")
+  df %>%
+    mutate(last_part = str_extract(Taxon, pattern))
+}
+
+levels <- c("Species", "Genus", "Family", "Order", "Class")
+lvl_prefix <- c("s", "g", "f", "o", "c")
+
+```
+
+Run the next block only if you want to differentiate between invertebrates whose diet vary in different life stages (Onthogenetic_shifters) and those that are true omnivores. By default both kind of organisms are classified as omnivores.
+
+```{r}
+# new_col <- ifelse(
+#   db$Ecology == "Omnivores" & db$Diet_varies_by_lifestage == "Yes",
+#   "Onthogenetic_shifters",
+#   db$Ecology
+# )
+# db$Ecology <- new_col
+```
+
+## **Expand synonyms**
+```{r}
+# function to replace last taxonomic level
+replace_last <- function(taxon, synonym) {
+  str_replace(taxon, "(__)[^;]+$", paste0("\\1", synonym))
+}
+# expanded rows (ONLY synonyms)
+db_expanded <- db %>%
+  filter(!is.na(Synonyms) & Synonyms != "") %>%
+  separate_rows(Synonyms, sep = ";") %>%
+  mutate(
+    Taxon = replace_last(Taxon, Synonyms)
+  )
+# combine original + expanded
+db_new <- bind_rows(db, db_expanded)
+# remove synonyms column
+db_new <- db_new[,-3]
+# deduplicate rows (in case some synonyms are identical)
+db_new <- db_new %>%
+  distinct(Taxon, .keep_all = TRUE)
+db <- db_new
+
+```
+
+
+## **Clean and Prepare the Database**
+
+```{r}
+# Remove entries with missing ecological or taxonomic level data
+db_clean <- db[!is.na(db$Ecology) & !is.na(db$Taxonomic_level) & db$Ecology != "", ]
+# Split the database into subsets based on the taxonomic level of guild assignment
+db_list <- setNames(lapply(levels, function(lvl) {db_clean[db_clean$Taxonomic_level == lvl, ]}), levels)
+# Replace white spaces with underscores in species-level taxon names
+db_list$Species$Taxon <- str_replace_all(db_list$Species$Taxon, "\\s+", "_")
+# Extract species level IDs
+db_list$Species <- db_list$Species %>%
+  mutate(last_part = str_extract(Taxon, "s__.*"))
+# Extract genus, family, order, and class level IDs
+for (i in 2:length(db_list)) {
+  db_list[[i]] <- extract_tax_level(db_list[[i]], lvl_prefix[i])
+}
+```
+
+## **Assign Trophic Guilds**
+
+```{r}
+Assigned <- list()
+
+# Assignment at the species level
+TaxToBeAssigned <- tax %>%
+  mutate(last_part = str_extract(Taxon, "s__.*"))
+res <- TaxToBeAssigned %>%
+  left_join(db_list$Species %>% select(last_part, Ecology), by = "last_part")
+Assigned$Species <- res %>% filter(!is.na(Ecology))
+TaxToBeAssigned <- res %>% filter(is.na(Ecology))
+
+# Assignment at the genus level
+TaxToBeAssigned <- extract_tax_level(TaxToBeAssigned[, 1:4], "g")
+res <- TaxToBeAssigned %>%
+  left_join(db_list$Genus %>% select(last_part, Ecology), by = "last_part")
+Assigned$Genus <- res %>% filter(!is.na(Ecology))
+TaxToBeAssigned <- res %>% filter(is.na(Ecology))
+
+# Assignment at the family level
+TaxToBeAssigned <- extract_tax_level(TaxToBeAssigned[, 1:4], "f")
+res <- TaxToBeAssigned %>%
+  left_join(db_list$Family %>% select(last_part, Ecology), by = "last_part")
+Assigned$Family <- res %>% filter(!is.na(Ecology))
+TaxToBeAssigned <- res %>% filter(is.na(Ecology))
+
+# Assignment at the order level
+TaxToBeAssigned <- extract_tax_level(TaxToBeAssigned[, 1:4], "o")
+res <- TaxToBeAssigned %>%
+  left_join(db_list$Order %>% select(last_part, Ecology), by = "last_part")
+Assigned$Order <- res %>% filter(!is.na(Ecology))
+TaxToBeAssigned <- res %>% filter(is.na(Ecology))
+
+# Assignment at the class level
+TaxToBeAssigned <- extract_tax_level(TaxToBeAssigned[, 1:4], "c")
+res <- TaxToBeAssigned %>%
+  left_join(db_list$Class %>% select(last_part, Ecology), by = "last_part")
+Assigned$Class <- res %>% filter(!is.na(Ecology))
+TaxToBeAssigned <- res %>% filter(is.na(Ecology))
+```
+
+## **Clean and Export Final Results**
+
+```{r}
+# Clean the output and add assignment level
+for (i in 1:length(Assigned)) {
+  Assigned[[i]] <- Assigned[[i]] %>%
+    select(-last_part) %>%
+    mutate(AssignmentLevel = levels[i])
+}
+Assigned_df <- do.call(rbind, Assigned)
+
+# Export results
+write.table(Assigned_df, "INVGuild_assigned.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(TaxToBeAssigned[1:3], "INVGuild_unassigned.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+
+# Check how many entries received a trophic guild assignment
+paste0(round(100*(nrow(Assigned_df) / (nrow(Assigned_df)+nrow(TaxToBeAssigned))),2),
+       "% of the original entries were assigned to a trophic guild")
+```
+
+## **Visualize The Classification Results**
+
+```{r}
+# Prepare data for visualization
+SumTab <- as.data.frame.matrix(table(Assigned_df$Ecology, Assigned_df$AssignmentLevel))
+desired_order <- c("Class", "Order", "Family", "Genus", "Species")
+SumTab <- SumTab[, desired_order[desired_order %in% colnames(SumTab)]]
+SumTab$Ecology <- row.names(SumTab)
+SumTab_long <- SumTab %>%
+  pivot_longer(cols = -Ecology, names_to = "AssignmentLevel", values_to = "Count")
+SumTab_long$AssignmentLevel <- factor(SumTab_long$AssignmentLevel,
+                                      levels = rev(c("Class", "Order", "Family", "Genus", "Species")))
+SumTab_long$All <- "All levels"
+
+# Get the number of entries assigned per taxonomic level
+lbls <- c(
+  paste0("species\n\n(n=", sum(Assigned_df$AssignmentLevel == "Species"), ")"),
+  paste0("genus\n\n(n=", sum(Assigned_df$AssignmentLevel == "Genus"), ")"),
+  paste0("family\n\n(n=", sum(Assigned_df$AssignmentLevel == "Family"), ")"),
+  paste0("order\n\n(n=", sum(Assigned_df$AssignmentLevel == "Order"), ")"),
+  paste0("class\n\n(n=", sum(Assigned_df$AssignmentLevel == "Class"), ")")
+)
+
+# Barplots showing the relative abundance of trophic guilds identified in the full dataset (on the left) and per taxonomic level (on the right)
+ggarrange(
+  ggplot(SumTab_long, aes(x = All, y = Count, fill = Ecology)) +
+    geom_bar(position="fill", stat = "identity") +
+    labs(x = "", y = "") +
+    theme_minimal() +
+    labs(fill = NULL),
+  ggplot(SumTab_long, aes(x = AssignmentLevel, y = Count, fill = Ecology)) +
+    geom_bar(position="fill", stat = "identity") +
+    labs(x = "", y = "") +
+    scale_x_discrete(labels = lbls) +
+    theme_minimal() +
+    labs(fill = NULL),
+  ncol=2, widths = c(1,2), common.legend = TRUE
+)
+```
