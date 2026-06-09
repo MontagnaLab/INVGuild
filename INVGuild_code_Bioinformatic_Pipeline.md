@@ -283,6 +283,8 @@ qiime feature-table summarize \
   --i-table table.qza \
   --o-visualization table.qzv
 ```
+43.7% of the ASVs (3.4% of the reads) were removed since not matching the reference database.
+48.8% (117,758 out of 241,108 ASVs) of the ASVs that matched the reference database were reoriented.
 
 ---
 
