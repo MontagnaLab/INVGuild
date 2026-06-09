@@ -283,7 +283,8 @@ qiime feature-table summarize \
   --i-table table.qza \
   --o-visualization table.qzv
 ```
-43.7% of the ASVs (3.4% of the reads) were removed since not matching the reference database.
+43.7% of the ASVs (3.4% of the reads) were removed since not matching the reference database. These sequences primarily corresponded to non-target taxa, including some fungi (e.g., several ASVs likely belonging to the genus Tulasnella) and poorly characterized environmental sequences (e.g., “uncultured soil eukaryote” hits).
+
 48.8% (117,758 out of 241,108 ASVs) of the ASVs that matched the reference database were reoriented.
 
 ---
