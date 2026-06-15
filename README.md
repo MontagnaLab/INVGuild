@@ -40,6 +40,9 @@ To ensure reliability:
 
 [tutorial (Rmd version)](INVGuild_TrophicGuildAssignment.Rmd)
 
+## Database expansion
+People interested in contributing to **INVGuild** development are encouraged to contact the corresponding author of this study (*in evaluation*) to provide new taxonomic entries together with bibliographic references documenting their trophic habits, or additional trophic information for taxa already included in the database. Contributors are requested to report only information that is substantiated by scientific literature.
+
 ## Citation
 
 If you use INVGuild in your work, please cite the corresponding publication:
