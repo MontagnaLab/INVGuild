@@ -1,17 +1,9 @@
-> [!IMPORTANT]
-> Work in progress
-
-## Denoising
-
-The default values of the dada2 parameters are usually good for most applications, but you should experiment with the values of `--p-trunc-len-f` and `--p-trunc-len-r` and compare the results (in terms of model fitting, number of retained sequences per sample and sequences length) to choose the best values. 
-
-Here an example of how to do it, assuming that q2-dada2 output files are named like this (<run.id> represent the variable part of the filename identifing a run using specific dada2 parameters):
+This code is for comparing the output of q2-dada2 runs using different parameters to select the best parameters combination. Assuming that q2-dada2 output files are named like this (<run.id> represent the variable part of the filename identifing the different runs):
 - denoising-stats_<run.id>.qza
 - table_<run.id>.qza
 - rep-seqs_<run.id>.qza
 
 ```bash
-
 # Export files
 tmpdir="tmp_${TLF}_${TLR}"
 mkdir -p "$tmpdir"
@@ -31,8 +23,12 @@ rm -r "$tmpdir"
 ```
 
 R script for comparing different dada2 runs.
+- PLOT1 compare percentges of reads retained per sample at each step of the dada2 algorithm
+- PLOT2 compare ASV sequence lengths for evaluating retained amplicon size
 
 ```bash
+R
+
 library(tidyr)
 library(dplyr)
 library(ggpubr)
@@ -165,6 +161,6 @@ p<-ggplot(long_df, aes(x = seq_lengths, color = method)) +
 
 ggplotly(p)
 
-
+q()
 ```
 
