@@ -230,7 +230,7 @@ qiime demux summarize \
 ---
 
 ## **5. Denoising and sequence re-orientation**
-Since barcodes and adapters were added after PCR amplification each fastq file contained both forward and reverse reads. So sequences were re-orientered using the reference database as guide.
+To select the best dada2 parameters combination this [code](Test_dada2_parameters.md) was used. Since barcodes and adapters were added after PCR amplification each fastq file contained both forward and reverse reads. So sequences were re-orientered using the reference database as guide.
 
 #### 5.1. Denoising with DADA2
 ```bash
