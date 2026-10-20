@@ -357,7 +357,7 @@ biom convert -i exp/feature-table.biom -o table.tsv --to-tsv
 qiime tools export \
   --input-path taxonomy.qza \
   --output-path exp
-mv exp/taxonomy.tsv taxonomy.tsv
+mv exp/taxonomy.tsv data/Taxonomy_LUCAS_Metazoa.tsv
 
 ```
 
