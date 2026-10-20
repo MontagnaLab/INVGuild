@@ -49,7 +49,7 @@ qiime rescript cull-seqs \
 
 # export taxonomy to tsv file
 qiime tools export \
-  --input-path silva-138.1-ssu-nr99-tax-cleaned.qza \
+  --input-path silva-138.1-ssu-nr99-tax.qza \
   --output-path exp
 ```
 
@@ -62,7 +62,7 @@ library(stringr)
 
 data<-read.table("exp/taxonomy.tsv", header=T, sep="\t")
 
-# eliminate species-level ID that do not correspond to taxon names (= those starting wih lowercase) 
+# eliminate species-level ID that do not correspond to taxon names (= those starting with lowercase) 
 badIDs <- data %>%
   mutate(
     STR = str_extract(Taxon, "s__([a-z].+)")  # Extract string starting with lowercase after "s__"
@@ -84,7 +84,7 @@ CleanData <- data %>%
     )
   )
 
-# eliminate genus-level ID that do not correspond to taxon names (= those starting wih lowercase) 
+# eliminate genus-level ID that do not correspond to taxon names (= those starting with lowercase) 
 badIDs <- CleanData %>%
   mutate(
     STR = str_extract(Taxon, "g__([a-z].+)")  # Extract string starting with lowercase after "g__"
@@ -107,7 +107,7 @@ CleanData2 <- CleanData %>%
     )
   )
 
-write.table(CleanData2, "silva-138.1-ssu-nr99-tax-cleaned.tsv", sep="\t", quote = F, row.names = F)
+write.table(CleanData2, "silva-138.1-ssu-nr99-tax-cleaned.tsv", sep="\t", quote = F, row.names = F, col.names = F)
 
 q()
 ```
@@ -191,7 +191,7 @@ The downloaded paired-end reads are named following this scheme: "Lucas\<sampleI
 ```bash
 # get absolute path of reads
 ls -1 ${RAWDIR}/*1.fq.gz > R1.txt
-ls -1 ${RAWDIR}/*1.fq.gz > R2.txt
+ls -1 ${RAWDIR}/*2.fq.gz > R2.txt
 # get identifiers
 ls ${RAWDIR}/*fq.gz | cut -c 1-9 | sort | uniq > ${RAWDIR}/ids.txt
 # make manifest file
@@ -312,7 +312,7 @@ qiime clawback generate-class-weights \
   --i-reference-sequences silva-138.1-ssu-nr99-seqs_Euk575-895_derep-uniq.qza \
   --i-samples table.qza \
   --i-taxonomy-classification taxonomy_no_confidence.qza \
-  --o-class-weight class-weights.qza
+  --o-class-weight Euk575-895_LUCAS_class-weights.qza
 
 # fit new classifier with weights
 qiime feature-classifier fit-classifier-naive-bayes \
