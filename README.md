@@ -49,4 +49,8 @@ If you use INVGuild in your work, please cite the corresponding publication:
 
 > *In evaluation*.
 
-[Code for bioinformatic analysis of the paper](LUCAS_Bioinformatic_Pipeline.md)
+### Code for replicating the analysis of the INVGuild paper
+
+- [Code for bioinformatic analysis](LUCAS_Bioinformatic_Pipeline.md)
+- [Code for diversity analysis and figure production](https://MontagnaLab.github.io/INVGuild/LUCAS_analysis_and_figures.html) ([Rmd version](LUCAS_analysis_and_figures.Rmd))
+
