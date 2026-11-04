@@ -351,13 +351,13 @@ qiime taxa filter-table \
 qiime tools export \
   --input-path table.qza \
   --output-path exp
-biom convert -i exp/feature-table.biom -o table.tsv --to-tsv
+biom convert -i exp/feature-table.biom -o LUCAS_data/ASV_Table_LUCAS_Metazoa.tsv --to-tsv
 
 # export taxonomy (ASVs taxonomic assignments)
 qiime tools export \
   --input-path taxonomy.qza \
   --output-path exp
-mv exp/taxonomy.tsv data/Taxonomy_LUCAS_Metazoa.tsv
+mv exp/taxonomy.tsv LUCAS_data/Taxonomy_LUCAS_Metazoa.tsv
 
 ```
 

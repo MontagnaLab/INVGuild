@@ -13,7 +13,7 @@ Understanding ecosystem functioning requires more than just knowing which specie
 
 ## Scope and Development
 
-The [INVGuild database](data/INVGuild.tsv) was developed from a curated list of terrestrial invertebrates identified in large-scale soil biodiversity studies.
+The [INVGuild database](INVGuild.tsv) was developed from a curated list of terrestrial invertebrates identified in large-scale soil biodiversity studies.
 
 To ensure reliability:
 
@@ -49,4 +49,4 @@ If you use INVGuild in your work, please cite the corresponding publication:
 
 > *In evaluation*.
 
-[Code for bioinformatic analysis of the paper](INVGuild_code_Bioinformatic_Pipeline.md)
+[Code for bioinformatic analysis of the paper](LUCAS_Bioinformatic_Pipeline.md)
