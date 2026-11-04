@@ -54,5 +54,5 @@ If you use INVGuild in your work, please cite the corresponding publication:
 Code and resources used for the analyses presented in the INVGuild study are available in this repository:
 
 - [Code for bioinformatic analysis](LUCAS_Bioinformatic_Pipeline.md)
-- [Code for diversity analysis and figure production](https://MontagnaLab.github.io/INVGuild/LUCAS_analysis_and_figures.html) ([Rmd version](LUCAS_analysis_and_figures.Rmd))
-
+- [Code for diversity analysis and figure production (html version)](https://MontagnaLab.github.io/INVGuild/LUCAS_analysis_and_figures.html)
+- [Code for diversity analysis and figure production (Rmd version](LUCAS_analysis_and_figures.Rmd)
