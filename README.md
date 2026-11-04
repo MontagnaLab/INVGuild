@@ -1,7 +1,6 @@
-
 <img src="logo.png" alt="logo" />
 
-# INVGuild
+
 
 **INVGuild** is an open-access, expandable reference database that links terrestrial invertebrate taxa to trophic guilds, enabling functional interpretation of biodiversity data. Developed through an extensive literature review, INVGuild addresses the need for functional trait information in biodiversity surveys, especially for species-rich and taxonomically complex groups like invertebrates.
 
@@ -51,7 +50,8 @@ If you use INVGuild in your work, please cite the corresponding publication:
 
 > *In evaluation*.
 
-### Code for replicating the analysis of the INVGuild paper
+## Code and reproducibility
+Code and resources used for the analyses presented in the INVGuild study are available in this repository:
 
 - [Code for bioinformatic analysis](LUCAS_Bioinformatic_Pipeline.md)
 - [Code for diversity analysis and figure production](https://MontagnaLab.github.io/INVGuild/LUCAS_analysis_and_figures.html) ([Rmd version](LUCAS_analysis_and_figures.Rmd))
