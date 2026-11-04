@@ -24,7 +24,7 @@ To ensure reliability:
 
 ## Database Contents
 
-* **964 taxonomic entries with functional assignment**
+* **964 taxonomic entries with trophic guild assignment**
   * 649 species
   * 233 genera
   * 71 families
@@ -36,6 +36,8 @@ To ensure reliability:
 * For each entry besides the assigned **trophic guild** also the **NCBI taxonomy ID**, the **synonyms**, the **taxonomic level of the assignment**, the **bibliographic references**, and some **ecological notes** are reported.
 
 ## How to use INVGuild
+This tutorial explains how to use a simple R script to assign trophic guilds to a list of invertebrate taxa using INVGuild.
+
 [tutorial (html version)](https://MontagnaLab.github.io/INVGuild/INVGuild_TrophicGuildAssignment.html)
 
 [tutorial (Rmd version)](INVGuild_TrophicGuildAssignment.Rmd)
