@@ -1,7 +1,6 @@
 <img src="logo.png" alt="logo" />
 
 
-
 **INVGuild** is an open-access, expandable reference database that links terrestrial invertebrate taxa to trophic guilds, enabling functional interpretation of biodiversity data. Developed through an extensive literature review, INVGuild addresses the need for functional trait information in biodiversity surveys, especially for species-rich and taxonomically complex groups like invertebrates.
 
 ## Why INVGuild?
