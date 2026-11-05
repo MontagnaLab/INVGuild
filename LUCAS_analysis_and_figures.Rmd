@@ -705,22 +705,38 @@ f4b<-ggboxplot(df_2, x = "Antrop", y = "Current_Natural_Log_Ratio",
 
 
 my_comparisons <- list( c("Woodland", "Grassland"), c("Woodland", "Cropland"), c("Grassland", "Cropland") )
-f4c<-ggboxplot(df_1, x = "LC_simpl_2018", y = "Current_Natural_Log_Ratio",
-          color = "LC_simpl_2018", palette = "jco", add = "jitter",
-          title = "",
-          legend = "right") + xlab("") + ylab("Natural log ratio") +
-  stat_compare_means(comparisons = my_comparisons, method = "wilcox.test") +
-  scale_color_manual(values=c("Cropland"="#E7298A","Grassland"="#E6AB02","Woodland"="#33A02C")) +
+
+stat.test1 <- df_1 %>%
+  pairwise_wilcox_test(
+    Current_Natural_Log_Ratio ~ LC_simpl_2018,
+    p.adjust.method = "BH"
+  )
+f4c <- ggboxplot(df_1, x = "LC_simpl_2018", y = "Current_Natural_Log_Ratio",
+          color = "LC_simpl_2018",  palette = "jco",  add = "jitter",
+          title = "",  legend = "right") +
+  xlab("") +  ylab("Natural log ratio") +
+  stat_signif(comparisons = my_comparisons,
+              annotations = format.pval(stat.test1$p.adj, digits = 2),
+              map_signif_level = FALSE,
+              step_increase = 0.1) +
+  scale_color_manual(values = c("Cropland" = "#E7298A","Grassland" = "#E6AB02","Woodland" = "#33A02C")) +
   theme(legend.title = element_blank())
 
-f4d<-ggboxplot(df_2, x = "LC_simpl_2018", y = "Current_Natural_Log_Ratio",
-          color = "LC_simpl_2018", palette = "jco", add = "jitter",
-          title = "",
-          legend = "right") + xlab("") + ylab("Natural log ratio") +
-  stat_compare_means(comparisons = my_comparisons, method = "wilcox.test") +
-  scale_color_manual(values=c("Cropland"="#E7298A","Grassland"="#E6AB02","Woodland"="#33A02C")) +
+stat.test2 <- df_2 %>%
+  pairwise_wilcox_test(
+    Current_Natural_Log_Ratio ~ LC_simpl_2018,
+    p.adjust.method = "BH"
+  )
+f4d <- ggboxplot(df_2, x = "LC_simpl_2018", y = "Current_Natural_Log_Ratio",
+          color = "LC_simpl_2018",  palette = "jco",  add = "jitter",
+          title = "",  legend = "right") +
+  xlab("") +  ylab("Natural log ratio") +
+  stat_signif(comparisons = my_comparisons,
+              annotations = format.pval(stat.test2$p.adj, digits = 2),
+              map_signif_level = FALSE,
+              step_increase = 0.1) +
+  scale_color_manual(values = c("Cropland" = "#E7298A","Grassland" = "#E6AB02","Woodland" = "#33A02C")) +
   theme(legend.title = element_blank())
-
 
 fig4_top<-ggarrange(
   ggarrange(f4a,f4b, nrow=1, legend="none"),
