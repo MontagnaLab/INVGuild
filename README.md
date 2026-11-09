@@ -1,13 +1,13 @@
 <img src="logo.png" alt="logo" />
 
 
-**INVGuild** is an open-access, expandable reference database that links terrestrial invertebrate taxa to trophic guilds, enabling functional interpretation of biodiversity data. Developed through an extensive literature review, INVGuild addresses the need for functional trait information in biodiversity surveys, especially for species-rich and taxonomically complex groups like invertebrates.
+**INVGuild** is an open-access, expandable reference database that links terrestrial invertebrate taxa to trophic guilds, supporting functional interpretation of biodiversity data. Developed through an extensive literature review, INVGuild addresses the need for functional trait information in biodiversity surveys, especially for the species-rich and taxonomically complex groups of invertebrates.
 
 ## Why INVGuild?
 
-Understanding ecosystem functioning requires more than just knowing which species are present, it requires insight into what roles those species play. Traditional taxonomic diversity metrics often fall short in capturing ecological dynamics. Functional diversity, by contrast, reflects ecological processes more directly. However, assigning functional roles (e.g., feeding strategies) to invertebrates in large-scale surveys is notoriously difficult.
+Understanding ecosystem functioning goes beyond identifying which species are present to determining the functional roles they fulfil within the ecosystem. Traditional taxonomic diversity metrics often fall short in capturing ecological dynamics. Functional diversity, by contrast, reflects ecological processes more directly. However, assigning functional roles to invertebrates in large-scale surveys is notoriously difficult.
 
-**INVGuild** bridges this gap by offering a **curated and structured database** to assign invertebrate taxa to one of **seven trophic guilds (bacterivores, carnivores, detritivores, fungivores, herbivores, microbivores, omnivores)**, making functional analysis accessible and scalable for ecological studies and biodiversity monitoring efforts.
+**INVGuild** support the consideraton of fuctional roles of taxa in biodiversity surveys by offering a **curated and structured database** that enables the assignment of invertebrate taxa to one of **seven trophic guilds (bacterivores, carnivores, detritivores, fungivores, herbivores, microbivores, omnivores)**.
 
 ## Scope and Development
 
@@ -17,7 +17,7 @@ To ensure reliability:
 
 * Taxa names were standardized following NCBI taxonomy.
 * Invalid or unrecognized names were excluded.
-* Trophic roles were assigned based on accurate literature review.
+* Trophic roles were assigned to taxa based on accurate literature review.
 * Assignments were made only when trophic roles were consistent across all members of a taxonomic group.
 
 ## Database Contents
@@ -41,16 +41,16 @@ This tutorial explains how to use a simple R script to assign trophic guilds to 
 [tutorial (Rmd version)](INVGuild_TrophicGuildAssignment.Rmd)
 
 ## Database expansion
-People interested in contributing to **INVGuild** development are encouraged to contact the corresponding author of this study (*in evaluation*) to provide new taxonomic entries together with bibliographic references documenting their trophic habits, or additional trophic information for taxa already included in the database. Contributors are requested to report only information that is substantiated by scientific literature.
+People interested in contributing to **INVGuild** development are encouraged to contact the corresponding author of this study (*under evaluation*) to provide new taxonomic entries together with bibliographic references documenting their trophic habits, or additional trophic information for taxa already included in the database. Contributors are requested to report only information that is substantiated by scientific literature.
 
 ## Citation
 
 If you use INVGuild in your work, please cite the corresponding publication:
 
-> *In evaluation*.
+> *Under evaluation*.
 
 ## Code and reproducibility
-Code and resources used for the analyses presented in the INVGuild study are available in this repository:
+Code and resources used for the analyses presented in the INVGuild study (*under evaluation*) are available here:
 
 - [Code for bioinformatic analysis](LUCAS_Bioinformatic_Pipeline.md)
 - [Code for diversity analysis and figure production (html version)](https://MontagnaLab.github.io/INVGuild/LUCAS_analysis_and_figures.html)
