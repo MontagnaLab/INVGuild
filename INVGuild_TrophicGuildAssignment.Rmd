@@ -26,8 +26,8 @@ library(ggpubr)
 
 Two input files are required:
 
-* the file containing the [INVGuild](https://github.com/MontagnaLab/INVGuild/) database ([*INVGuild.tsv*](https://github.com/MontagnaLab/INVGuild/blob/main/data/INVGuild.tsv)).
-* the file containing the list of invertebrate taxa (formatted like [SILVA](https://www.arb-silva.de/)) to be assigned to a trophic guild in a column named "Taxon". In this case we use the file [*Taxonomy_LUCAS_Metazoa.tsv*](https://github.com/MontagnaLab/INVGuild/blob/main/data/Taxonomy_LUCAS_Metazoa.tsv), that contains the list of invertebrate taxa obtained in the [INVGuild paper](https://www.XXX.xx/) reanalysing the [LUCAS dataset](https://doi.org/10.1111/gcb.16871).
+* [INVGuild](https://github.com/MontagnaLab/INVGuild/) database ([*INVGuild.tsv*](https://github.com/MontagnaLab/INVGuild/blob/main/data/INVGuild.tsv)).
+* the list of invertebrate taxa (formatted like [SILVA](https://www.arb-silva.de/)) to be assigned to a trophic guild in a column named "Taxon". In this tutorial we use the file [*Taxonomy_LUCAS_Metazoa.tsv*](https://github.com/MontagnaLab/INVGuild/blob/main/data/Taxonomy_LUCAS_Metazoa.tsv), that contains the list of invertebrate taxa obtained in the [INVGuild paper](https://www.XXX.xx/) by reanalysing the [LUCAS dataset](https://doi.org/10.1111/gcb.16871).
 
 ```{r}
 db <- read.csv("INVGuild.tsv", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
@@ -48,7 +48,7 @@ lvl_prefix <- c("s", "g", "f", "o", "c")
 
 ```
 
-Run the next block only if you want to differentiate between invertebrates whose diet vary in different life stages (Ontogenetic_shifters) and those that are true omnivores. By default both kind of organisms are classified as omnivores.
+Run the next block only if you want to modify the classification of organisms which undergo dietary shifts during their life cycle, by default assigned to omnivores, by treating them as a further group (ontogenetic shifters).
 
 ```{r}
 # new_col <- ifelse(
