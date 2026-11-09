@@ -1,6 +1,6 @@
 # **Bioinformatic pipeline used to analyse LUCAS data**
 
-#### Primers used for the amplification
+#### Primers used for the marker region amplification in the original study
 - **Euk575F**: `ASCYGYGGTAAYWCCAGC`
 - **Euk895R**: `TCHNHGNATTTCACCNCT`
 
