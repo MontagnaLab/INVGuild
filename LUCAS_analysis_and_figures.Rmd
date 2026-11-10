@@ -1,0 +1,1124 @@
+---
+title: "**Alpha diversity analysis**"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: readable
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## **Load Required Libraries**
+
+```{r}
+library(iNEXT)
+library(ggplot2)
+library(ggpubr)
+library(scales)
+library(RColorBrewer)
+library(scales)
+library(dplyr)
+library(tidyr)
+library(multcompView)
+library(stringr)
+
+```
+
+## **Prepare the data**
+
+```{r}
+## assigned features
+tfa <- read.table("LUCAS_data/INVGuild_assigned.tsv", header=TRUE, sep="\t", stringsAsFactors = F, check.names = F)
+names(tfa)[4]<-"guild"
+
+## unassigned features
+uns <- read.table("LUCAS_data/INVGuild_unassigned.tsv", header=TRUE, sep="\t", stringsAsFactors = F, check.names = F)
+
+## feature metadata
+tax<-rbind(tfa[,1:3],uns[,1:3])
+
+## ASV table
+tab<-read.table("LUCAS_data/ASV_Table_LUCAS_Metazoa.tsv", header=TRUE, sep="\t", stringsAsFactors = F, row.names = 1, check.names = F)
+
+## make appropriate metadata for splitting by phylum
+tmtd<-tax[,1:2]
+tmtd$TaxGroup <- sub(".*?(p__[a-zA-Z]+)(;|$).*", "\\1", tmtd$Taxon)
+
+## make appropriate metadata for splitting by guild
+fmtd<-tfa[,c(1,4)]
+
+## sample metadata
+# met1 <- read.csv("LUCAS_data/metadata.tsv", header=TRUE, sep="\t", stringsAsFactors = F, check.names = F)
+# met1$Antrop <- ifelse(met1$LC1_2018 %in% c("WL_coniferous","WL_broadleaved","GL_unmanaged"),
+#                       "Natural", "Antropic")
+# met2 <- read.csv("LUCAS_data/metadata_LUCAS_points.csv", header=TRUE,
+#                  sep=",", stringsAsFactors = F, check.names = F)
+# met <- merge(met1, met2, by.x = "LUCAS_ID", by.y = "POINT_ID", all.x = TRUE)
+# macrocategories <- list(
+#   Cereals = c("Barley", "Durum wheat", "Oats", "Mixed cereals for fodder", "Maize", "Common wheat", "Rye", "Triticale", "Other cereals"),
+#   Legumes = c("Dry pulses", "Soya", "Other leguminous and mixtures for fodder", "Lucerne"),
+#   Trees = c("Olive groves", "Nuts trees", "Vineyards", "Cherry fruit", "Other fruit trees and berries", "Pear fruit", "Apple fruit"),
+#   Tubers = c("Potatoes", "Other root crops", "Sugar beet"),
+#   OilseedsOrFibreCrops = c("Sunflower", "Rape and turnip rape", "Other fibre and oleaginous crops"),
+#   Miscellaneous = c("Spontaneously vegetated surfaces", "Temporary grasslands", "Other fresh vegetables", "Strawberries", "Other non-permanent industrial crops")
+# )
+# get_macrocategory <- function(crop) {
+#   for (macro in names(macrocategories)) {
+#     if (crop %in% macrocategories[[macro]]) {
+#       return(macro)
+#     }
+#   }
+#   return("Not_A_Crop")
+# }
+# met$Cropland_spec <- sapply(met$LC1_LABEL, get_macrocategory)
+# met<-data.frame(SampleID=met$SampleID,met[-2])
+# met$Tree <- ifelse(met$Cropland_spec == "Trees",
+#                        "Tree", "NotTree")
+# write.table(met, "LUCAS_data/LUCAS_metadata.tsv", sep="\t",
+#             row.names = F, quote = F)
+met <- read.csv("LUCAS_data/LUCAS_metadata.tsv", header=TRUE, sep="\t", stringsAsFactors = F, check.names = F)
+```
+
+## **Helper Function and Variables**
+
+**SplitTableBySampleMetadataColumn()**
+
+Given:
+
+- OriginalTable: a table with rows as features and columns as samples
+- Metadata: sample metadata (with the first column with sample names corresponding to the names in the table)
+- MetColumn: the name of a metadata column to be used for grouping
+
+return a list of tables splitted by the metadata column values.
+
+```{r}
+SplitTableBySampleMetadataColumn <- function(OriginalTable, Metadata, MetColumn) {
+  # merge (transposed) table and metadata
+  df <- merge(Metadata,as.data.frame(t(OriginalTable)), by.x = 1, by.y = "row.names")
+  # split in a list based on MetColumn values
+  df_split <- split.data.frame(df,df[[MetColumn]])
+  # remove metadata from the dfs, re-transpose
+  df_split2<-df_split
+  for (i in 1:length(df_split2)) {
+    dd<-df_split2[[i]]
+    dd_num<-dd[,c(1,(ncol(Metadata)+1):ncol(dd))]
+    dd_num2<-t(dd_num[,-1])
+    colnames(dd_num2)<-dd[,1]
+    df_split2[[i]]<-as.matrix(dd_num2)
+  }
+  return(df_split2)
+}
+```
+
+**SplitTableByFeatureMetadataColumn()**
+
+Given:
+
+- OriginalTable: a table with rows as features and columns as samples
+- Metadata: feature metadata (with the first column with feature names corresponding to the rownames of the table)
+- MetColumn: the name of a metadata column to be used for grouping
+
+return a list of abundance tables splitted by the metadata column values.
+  
+```{r}
+
+SplitTableByFeatureMetadataColumn <- function(OriginalTable, Metadata, MetColumn) {
+  # merge (transposed) table and metadata
+  df <- merge(Metadata,as.data.frame(OriginalTable), by.x = 1, by.y = "row.names")
+  # split in a list based on MetColumn values
+  df_split <- split.data.frame(df,df[[MetColumn]])
+  # remove metadata from the dfs
+  df_split2<-df_split
+  for (i in 1:length(df_split2)) {
+    dd<-df_split2[[i]]
+    dd_num<-dd[,c(1,(ncol(Metadata)+1):ncol(dd))]
+    dd_num2<-dd_num[,-1]
+    row.names(dd_num2)<-dd[,1]
+    if (ncol(dd_num2)>1 & nrow(dd_num2)>1) {
+      df_split2[[i]]<-as.matrix(dd_num2)
+    } else {
+      print(paste0("Failed for ",names(df_split2)[[i]]))
+      df_split2[[i]]<-NA}
+  }
+  return(df_split2)
+}
+```
+
+**MakeBinary()**
+
+Given a list of tables with abundance data, return a list of presence-absence tables.
+
+```{r}
+MakeBinary <- function(OriginalList) {
+  dat<-OriginalList
+  for (i in 1:length(dat)) {
+    dd<-dat[[i]]
+    dd[dd>0] <- 1
+    dat[[i]] <- dd
+  }
+  return(dat)
+}
+```
+
+Helper variables.
+
+```{r}
+Names_Taxa<-c("p__Rotifera", "p__Tardigrada", "p__Nematozoa", "p__Arthropoda", "p__Annelida")
+#Names_Taxa2<-c("p__Tardigrada", "p__Nematozoa", "p__Arthropoda", "p__Annelida")
+Names_Guilds<-c("Detritivores","Carnivores","Fungivores","Herbivores","Microbiovores","Omnivores","Bacterivores" )
+```
+
+
+## **Make tables split by taxonomy and by guild**
+
+**Table split by taxonomy (phylum level)**
+```{r}
+# split by taxa
+Table_SplitByTaxa <- SplitTableByFeatureMetadataColumn(tab, tmtd, "TaxGroup")
+# keep only phylum used in the paper
+Table_SplitByTaxa <- Table_SplitByTaxa[names(Table_SplitByTaxa) %in% Names_Taxa]
+# make binary
+Table_SplitByTaxa_01 <- MakeBinary(Table_SplitByTaxa)
+```
+
+
+**Table split by guild**
+
+```{r}
+tbl<-tab[row.names(tab) %in% fmtd$Feature.ID,]
+# split by guild
+Table_SplitByGuild <- SplitTableByFeatureMetadataColumn(tbl, fmtd, "guild")
+# make binary
+Table_SplitByGuild_01 <- MakeBinary(Table_SplitByGuild)
+
+```
+
+
+
+## **FIGURE 1**
+
+### **Figure 1A**
+
+Taxonomy barplot
+
+```{r}
+### Data preparation
+# data on number of ASVs/reads per group
+taxDF <- data.frame(
+  Taxa = c(sub("^p__", "", names(Table_SplitByTaxa)), 
+           "Others"),
+  ASVs = c(sapply(Table_SplitByTaxa, nrow),
+           nrow(tab) - sum(sapply(Table_SplitByTaxa, nrow))),
+  Reads = c(sapply(Table_SplitByTaxa, sum),
+            sum(tab) - sum(sapply(Table_SplitByTaxa, sum))))
+# rename Nematozoa to Nematoda
+taxDF$Taxa[taxDF$Taxa == "Nematozoa"] <- "Nematoda"
+# clean and reorder names
+row.names(taxDF)<-NULL
+taxDF$Taxa<-factor(taxDF$Taxa, levels = c("Annelida","Arthropoda","Nematoda","Rotifera","Tardigrada","Others"))
+
+### Fig 1A - number of ASVs
+t1<-ggplot(taxDF, aes(x = "", y = ASVs, fill = Taxa)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  labs(x = NULL, y = NULL, title = "Number of ASVs") +
+  scale_y_continuous(labels = label_number(scale_cut = cut_si(""))) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank(),
+        legend.title = element_blank(),
+    axis.title.x = element_text(size = 10),
+    axis.title.y = element_text(size = 10),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    strip.text = element_text(size = 12),
+    plot.title = element_text(size = 11),
+    legend.text = element_text(size = 11))
+
+### Fig 1A - number of reads
+t2<-ggplot(taxDF, aes(x = "", y = Reads, fill = Taxa)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  labs(x = NULL, y = NULL, title = "Number of reads") +
+  scale_y_continuous(breaks = c(0,5000000,10000000,15000000), labels = label_number(scale_cut = cut_si(""))) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank(),
+        legend.title = element_blank(),
+    axis.title.x = element_text(size = 10),
+    axis.title.y = element_text(size = 10),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    strip.text = element_text(size = 12),
+    plot.title = element_text(size = 11),
+    legend.text = element_text(size = 11))
+```
+
+### **Figure 1B**
+
+Guild barplot
+
+```{r}
+### Data preparation
+# data on number of ASVs/reads per group
+guiDF <- data.frame(
+  Guild = c(names(Table_SplitByGuild)),
+  ASVs = c(sapply(Table_SplitByGuild, nrow)),
+  Reads = c(sapply(Table_SplitByGuild, sum)))
+row.names(guiDF)<-NULL
+
+### Fig 1B - number of ASVs
+g1<-ggplot(guiDF, aes(x = "", y = ASVs, fill = Guild)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  labs(x = NULL, y = NULL, title = "Number of ASVs") +
+  scale_y_continuous(labels = label_number(scale_cut = cut_si(""))) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank(),
+        legend.title = element_blank(),
+    axis.title.x = element_text(size = 10),
+    axis.title.y = element_text(size = 10),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    strip.text = element_text(size = 12),
+    plot.title = element_text(size = 11),
+    legend.text = element_text(size = 11))
+### Fig 1B - number of reads
+g2<-ggplot(guiDF, aes(x = "", y = Reads, fill = Guild)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  labs(x = NULL, y = NULL, title = "Number of reads") +
+  scale_y_continuous(labels = label_number(scale_cut = cut_si(""))) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank(),
+        legend.title = element_blank(),
+    axis.title.x = element_text(size = 10),
+    axis.title.y = element_text(size = 10),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    strip.text = element_text(size = 12),
+    plot.title = element_text(size = 11),
+    legend.text = element_text(size = 11))
+```
+
+
+### **Figure 1C**
+
+Taxonomy curves
+
+```{r}
+# tbl_01 <- Table_SplitByTaxa_01
+# res <- iNEXT(tbl_01, q=c(0,2), datatype = "incidence_raw",
+#             endpoint = 800, knots = 80,
+#             se = TRUE, conf = 0.95, nboot = 500)
+# saveRDS(res,"RDSs/iNEXT_FullTable_ByTaxa.rds")
+iNEXT_FullTable_ByTaxa <- readRDS("RDSs/iNEXT_FullTable_ByTaxa.rds")
+
+t3<-ggiNEXT(iNEXT_FullTable_ByTaxa, type = 1,
+        facet.var = "Order.q", color.var = "Assemblage",
+        se = TRUE, grey = FALSE) +
+  xlab("Number of samples") + ylab("") +
+  facet_wrap(~Order.q, scales="free",
+             labeller = labeller(
+               Order.q = c("0" = "Richness","2" = "1/Simpson"))) +
+  scale_color_brewer(palette = "Set2") +
+  scale_fill_brewer(palette = "Set2") +
+  scale_shape_manual(values = rep(16,5)) +
+  theme(legend.position = "none",
+    axis.title.x = element_text(size = 10),
+    axis.title.y = element_text(size = 10),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    strip.text = element_text(size = 12),
+    plot.title = element_text(size = 12),
+    legend.text = element_text(size = 12))
+
+
+```
+
+
+### **Figure 1D**
+
+Guild curves
+
+```{r}
+# tbl_01 <- Table_SplitByGuild_01
+# res <- iNEXT(tbl_01, q=c(0,2), datatype = "incidence_raw",
+#             endpoint = 800, knots = 80,
+#             se = TRUE, conf = 0.95, nboot = 500)
+# saveRDS(res,"RDSs/iNEXT_FullTable_ByGuild.rds")
+iNEXT_FullTable_ByGuild <- readRDS("RDSs/iNEXT_FullTable_ByGuild.rds")
+g3<-ggiNEXT(iNEXT_FullTable_ByGuild, type = 1,
+        facet.var = "Order.q", color.var = "Assemblage",
+        se = TRUE, grey = FALSE) +
+  xlab("Number of samples") + ylab("") +
+  facet_wrap(~Order.q, scales="free",
+             labeller = labeller(
+               Order.q = c("0" = "Richness","2" = "1/Simpson"))) +
+  scale_color_hue() +
+  scale_fill_hue() +
+  scale_shape_manual(values = rep(16,7)) +
+  theme(legend.position = "none",
+    axis.title.x = element_text(size = 10),
+    axis.title.y = element_text(size = 10),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    strip.text = element_text(size = 12),
+    plot.title = element_text(size = 12),
+    legend.text = element_text(size = 12))
+
+```
+
+
+### **Figure 1 complete**
+
+```{r, fig.width=21*0.55, fig.height=14.8*0.55, out.width="100%"}
+fig1<-ggarrange(
+  ggarrange(ggarrange(t1,t2, common.legend = TRUE, legend = "right"),t3, widths = c(1,1.5)),
+  ggarrange(ggarrange(g1,g2, common.legend = TRUE, legend = "right"),g3, widths = c(1,1.5)),
+  nrow=2
+)
+
+print(fig1)
+
+ggsave("Figures/Figure_1.pdf", plot = fig1, device="pdf", scale = 1.7,
+      width = 180, height = (210/297)*180 , units = "mm", bg="white")
+
+```
+
+
+## **FIGURE 2**
+
+### Data preparation
+```{r}
+
+# ll <- Table_SplitByTaxa_01
+# outl<-list()
+# for (i in 1:length(ll)) {
+#  df <- ll[[i]]
+#  tbl_01 <- SplitTableBySampleMetadataColumn(df,met,"Antrop")
+#  minCol=min(sapply(tbl_01, ncol))
+#  res <- iNEXT(tbl_01, q=c(0,2), datatype = "incidence_raw",
+#             endpoint = 2*minCol, knots = 40,
+#             se = TRUE, conf = 0.95, nboot = 500)
+#  outl[[i]] <- res
+# }
+# names(outl)<-names(ll)
+# saveRDS(outl,"RDSs/iNEXT_SplitByTaxa_byAntrop.rds")
+iNEXT_SplitByTaxa_byAntrop <- readRDS("RDSs/iNEXT_SplitByTaxa_byAntrop.rds")
+
+# ll <- Table_SplitByTaxa_01
+# outl<-list()
+# for (i in 1:length(ll)) {
+#  df <- ll[[i]]
+#  tbl_01 <- SplitTableBySampleMetadataColumn(df,met,"LC_simpl_2018")
+#  minCol=min(sapply(tbl_01, ncol))
+#  res <- iNEXT(tbl_01, q=c(0,2), datatype = "incidence_raw",
+#             endpoint = 2*minCol, knots = 40,
+#             se = TRUE, conf = 0.95, nboot = 500)
+#  outl[[i]] <- res
+# }
+# names(outl)<-names(ll)
+# saveRDS(outl,"RDSs/iNEXT_SplitByTaxa_byEnvSimpl.rds")
+iNEXT_SplitByTaxa_byEnvSimpl <- readRDS("RDSs/iNEXT_SplitByTaxa_byEnvSimpl.rds")
+
+
+# CroplandSamples<-met[!met$Cropland_spec %in% c("Not_A_Crop","Miscellaneous","Tubers"),]$SampleID
+# ll <- Table_SplitByTaxa_01
+# outl<-list()
+# for (i in 1:length(ll)) {
+#  df <- as.data.frame(ll[[i]])
+#  df <- df[names(df) %in% CroplandSamples]
+#  tbl_01 <- SplitTableBySampleMetadataColumn(df,met,"Tree")
+#  names(tbl_01)[names(tbl_01)=="NotTree"] <- "Annual crop"
+#  names(tbl_01)[names(tbl_01)=="Tree"] <- "Permanent crop"
+#  minCol=min(sapply(tbl_01, ncol))
+#  res <- iNEXT(tbl_01, q=c(0,2), datatype = "incidence_raw",
+#               endpoint = minCol*2, knots = 40,
+#               se = TRUE, conf = 0.95, nboot = 500)
+#  outl[[i]] <- res
+# }
+# names(outl)<-names(ll)
+# saveRDS(outl,"RDSs/iNEXT_SplitByTaxa_byCropType.rds")
+iNEXT_SplitByTaxa_byCropType <- readRDS("RDSs/iNEXT_SplitByTaxa_byCropType.rds")
+
+titles<-c("Annelida", "Arthropoda", "Nematoda", "Rotifera", "Tardigrada")
+
+```
+
+
+### **Figure 2A**
+
+```{r}
+# Antrop
+dat<-iNEXT_SplitByTaxa_byAntrop
+plts_2a<-list()
+for(i in 1:length(dat)) {
+  plts_2a[[i]]<-ggiNEXT(dat[[i]], type = 1,
+                       facet.var = "Order.q", color.var = "Assemblage",
+                       se = TRUE, grey = FALSE) +
+    xlab("") + ylab("") + ggtitle (names(dat)[i]) +
+    facet_wrap(~Order.q, scales="free",
+               labeller = labeller(
+                 Order.q = c("0" = "Richness","2" = "1/Simpson"))) +
+    theme(
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10),
+      strip.text = element_text(size = 12),
+      plot.title = element_text(size = 14, hjust = 0.5),
+      legend.text = element_text(size = 14)) +
+    guides(shape = "none", linetype = "none") +
+    ggtitle(titles[i])
+}
+```
+
+### **Figure 2B**
+
+```{r}
+# EnvSimpl
+dat<-iNEXT_SplitByTaxa_byEnvSimpl
+plts_2b<-list()
+for(i in 1:length(dat)) {
+  plts_2b[[i]] <- ggiNEXT(dat[[i]], type = 1,
+                         facet.var = "Order.q",
+                         color.var = "Assemblage",
+                         se = TRUE, grey = FALSE) +
+    aes(shape = Assemblage) +
+    xlab("") + ylab("") +
+    facet_wrap(~Order.q, scales = "free",
+               labeller = labeller(
+                 Order.q = c("0" = "Richness",
+                             "2" = "1/Simpson"))) +
+    scale_color_manual(values = c("Cropland" = "#E7298A",
+                                  "Grassland" = "#E6AB02",
+                                  "Woodland" = "#33A02C")) +
+    scale_fill_manual(values = c("Cropland" = "#E7298A",
+                                 "Grassland" = "#E6AB02",
+                                 "Woodland" = "#33A02C")) +
+    scale_shape_manual(values = c("Cropland" = 16,
+                                  "Grassland" = 15,
+                                  "Woodland" = 1)) +
+    theme(
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10),
+      strip.text = element_text(size = 12),
+      plot.title = element_text(size = 14, hjust = 0.5),
+      legend.text = element_text(size = 14)) +
+    guides(linetype = "none") +
+    ggtitle(titles[i])
+}
+
+```
+
+### **Figure 2C**
+
+```{r}
+
+# CropType
+dat<-iNEXT_SplitByTaxa_byCropType
+plts_2c<-list()
+for(i in 1:length(dat)) {
+  plts_2c[[i]]<-ggiNEXT(dat[[i]], type = 1,
+                       facet.var = "Order.q", color.var = "Assemblage",
+                       se = TRUE, grey = FALSE) +
+    aes(shape = Assemblage) +
+    xlab("") + ylab("") + ggtitle (names(dat)[i]) +
+    facet_wrap(~Order.q, scales="free",
+               labeller = labeller(
+                 Order.q = c("0" = "Richness","2" = "1/Simpson"))) +
+    scale_color_manual(values=c("Permanent crop"="#6A3D9A","Annual crop"="#B15928"),
+                       labels=c("Annual crop","Perennial crop")) +
+    scale_fill_manual(values=c("Permanent crop"="#6A3D9A","Annual crop"="#B15928"),
+                       labels=c("Annual crop","Perennial crop")) +
+    scale_shape_manual(values = c("Permanent crop" = 18,
+                                  "Annual crop" = 15)) +
+    theme(
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10),
+      strip.text = element_text(size = 12),
+      plot.title = element_text(size = 14, hjust = 0.5),
+      legend.text = element_text(size = 14)) +
+    guides(linetype = "none",
+           shape = "none") +
+    ggtitle(titles[i])
+}
+
+```
+
+### **Figure 2 complete**
+
+```{r, fig.width=21*0.7, fig.height=(5/7*29.7)*0.7, out.width="100%"}
+
+arrPlts_2a<-ggarrange(plotlist = plts_2a, ncol=1, nrow=5, common.legend=TRUE, legend = "bottom")
+arrPlts_2b<-ggarrange(plotlist = plts_2b, ncol=1, nrow=5, common.legend=TRUE, legend = "bottom")
+arrPlts_2c<-ggarrange(plotlist = plts_2c, ncol=1, nrow=5, common.legend=TRUE, legend = "bottom")
+
+fig2 <- ggarrange(arrPlts_2a,arrPlts_2b,arrPlts_2c, ncol=3, legend = "bottom")
+
+print(fig2)
+
+ggsave("Figures/Figure_2.pdf", device="pdf", plot = fig2, scale=1.8,
+      width = 180, height = (5/7*297)/210*180, units = "mm", bg="white")
+
+
+```
+
+## **FIGURE 3**
+
+### Data preparation
+```{r}
+
+# ll <- Table_SplitByGuild_01
+# outl<-list()
+# for (i in 1:length(ll)) {
+#  df <- ll[[i]]
+#  tbl_01 <- SplitTableBySampleMetadataColumn(df,met,"Antrop")
+#  minCol=min(sapply(tbl_01, ncol))
+#  res <- iNEXT(tbl_01, q=c(0,2), datatype = "incidence_raw",
+#             endpoint = 2*minCol, knots = 40,
+#             se = TRUE, conf = 0.95, nboot = 500)
+#  outl[[i]] <- res
+# }
+# names(outl)<-names(ll)
+# saveRDS(outl,"RDSs/iNEXT_SplitByGuild_byAntrop.rds")
+iNEXT_SplitByGuild_byAntrop <- readRDS("RDSs/iNEXT_SplitByGuild_byAntrop.rds")
+
+# ll <- Table_SplitByGuild_01
+# outl<-list()
+# for (i in 1:length(ll)) {
+#  df <- ll[[i]]
+#  tbl_01 <- SplitTableBySampleMetadataColumn(df,met,"LC_simpl_2018")
+#  minCol=min(sapply(tbl_01, ncol))
+#  res <- iNEXT(tbl_01, q=c(0,2), datatype = "incidence_raw",
+#             endpoint = 2*minCol, knots = 40,
+#             se = TRUE, conf = 0.95, nboot = 500)
+#  outl[[i]] <- res
+# }
+# names(outl)<-names(ll)
+# saveRDS(outl,"RDSs/iNEXT_SplitByGuild_byEnvSimpl.rds")
+iNEXT_SplitByGuild_byEnvSimpl <- readRDS("RDSs/iNEXT_SplitByGuild_byEnvSimpl.rds")
+
+
+# CroplandSamples<-met[!met$Cropland_spec %in% c("Not_A_Crop","Miscellaneous","Tubers"),]$SampleID
+# ll <- Table_SplitByGuild_01
+# outl<-list()
+# for (i in 1:length(ll)) {
+#  df <- as.data.frame(ll[[i]])
+#  df <- df[names(df) %in% CroplandSamples]
+#  tbl_01 <- SplitTableBySampleMetadataColumn(df,met,"Tree")
+#  names(tbl_01)[names(tbl_01)=="NotTree"] <- "Annual crop"
+#  names(tbl_01)[names(tbl_01)=="Tree"] <- "Permanent crop"
+#  minCol=min(sapply(tbl_01, ncol))
+#  res <- iNEXT(tbl_01, q=c(0,2), datatype = "incidence_raw",
+#               endpoint = minCol*2, knots = 40,
+#               se = TRUE, conf = 0.95, nboot = 500)
+#  outl[[i]] <- res
+# }
+# names(outl)<-names(ll)
+# saveRDS(outl,"RDSs/iNEXT_SplitByGuild_byCropType.rds")
+iNEXT_SplitByGuild_byCropType <- readRDS("RDSs/iNEXT_SplitByGuild_byCropType.rds")
+
+
+
+```
+
+
+### **Figure 3A**
+
+```{r}
+# Antrop
+dat<-iNEXT_SplitByGuild_byAntrop
+plts_3a<-list()
+for(i in 1:length(dat)) {
+  plts_3a[[i]]<-ggiNEXT(dat[[i]], type = 1,
+                       facet.var = "Order.q", color.var = "Assemblage",
+                       se = TRUE, grey = FALSE) +
+    xlab("") + ylab("") + ggtitle (names(dat)[i]) +
+    facet_wrap(~Order.q, scales="free",
+               labeller = labeller(
+                 Order.q = c("0" = "Richness","2" = "1/Simpson"))) +
+    theme(
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10),
+      strip.text = element_text(size = 12),
+      plot.title = element_text(size = 14, hjust = 0.5),
+      legend.text = element_text(size = 14)) +
+    guides(shape = "none", linetype = "none") +
+    ggtitle(names(dat)[i])
+}
+```
+
+### **Figure 3B**
+
+```{r}
+# EnvSimpl
+dat<-iNEXT_SplitByGuild_byEnvSimpl
+plts_3b<-list()
+for(i in 1:length(dat)) {
+  plts_3b[[i]]<-ggiNEXT(dat[[i]], type = 1,
+                       facet.var = "Order.q", color.var = "Assemblage",
+                       se = TRUE, grey = FALSE) +
+    aes(shape = Assemblage) +
+    xlab("") + ylab("") + ggtitle (names(dat)[i]) +
+    facet_wrap(~Order.q, scales="free",
+               labeller = labeller(
+                 Order.q = c("0" = "Richness","2" = "1/Simpson"))) +
+    scale_color_manual(values=c("Cropland"="#E7298A","Grassland"="#E6AB02","Woodland"="#33A02C")) +
+    scale_fill_manual(values=c("Cropland"="#E7298A","Grassland"="#E6AB02","Woodland"="#33A02C")) +
+    scale_shape_manual(values = c("Cropland" = 16,
+                                  "Grassland" = 15,
+                                  "Woodland" = 1)) +
+    theme(
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10),
+      strip.text = element_text(size = 12),
+      plot.title = element_text(size = 14, hjust = 0.5),
+      legend.text = element_text(size = 14)) +
+    guides(shape = "none", linetype = "none") +
+    ggtitle(names(dat)[i])
+}
+
+```
+
+### **Figure 3C**
+
+```{r}
+# CropType
+dat<-iNEXT_SplitByGuild_byCropType
+plts_3c<-list()
+for(i in 1:length(dat)) {
+  plts_3c[[i]]<-ggiNEXT(dat[[i]], type = 1,
+                       facet.var = "Order.q", color.var = "Assemblage",
+                       se = TRUE, grey = FALSE) +
+    aes(shape = Assemblage) +
+    xlab("") + ylab("") + ggtitle (names(dat)[i]) +
+    facet_wrap(~Order.q, scales="free",
+               labeller = labeller(
+                 Order.q = c("0" = "Richness","2" = "1/Simpson"))) +
+    scale_color_manual(values=c("Permanent crop"="#6A3D9A","Annual crop"="#B15928"),
+                       labels=c("Annual crop","Perennial crop")) +
+    scale_fill_manual(values=c("Permanent crop"="#6A3D9A","Annual crop"="#B15928"),
+                       labels=c("Annual crop","Perennial crop")) +
+    scale_shape_manual(values = c("Permanent crop" = 18,
+                                  "Annual crop" = 15)) +
+    theme(
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10),
+      strip.text = element_text(size = 12),
+      plot.title = element_text(size = 14, hjust = 0.5),
+      legend.text = element_text(size = 14)) +
+    guides(shape = "none", linetype = "none") +
+    ggtitle(names(dat)[i])
+}
+
+```
+
+### **Figure 3 complete**
+
+```{r, fig.width=21*0.7, fig.height=(5/7*29.7)*0.7, out.width="100%"}
+
+
+arrPlts_3a<-ggarrange(plotlist = plts_3a[1:5], ncol=1, nrow=5, common.legend=TRUE, legend = "bottom")
+arrPlts_3b<-ggarrange(plotlist = plts_3b[1:5], ncol=1, nrow=5, common.legend=TRUE, legend = "bottom")
+arrPlts_3c<-ggarrange(plotlist = plts_3c[1:5], ncol=1, nrow=5, common.legend=TRUE, legend = "bottom")
+
+fig3 <- ggarrange(arrPlts_3a,arrPlts_3b,arrPlts_3c, ncol=3, legend = "bottom")
+
+print(fig3)
+
+ggsave("Figures/Figure_3.pdf", plot = fig3, device="pdf", scale=1.8,
+      width = 180, height = (5/7*297)/210*180, units = "mm", bg="white")
+
+
+```
+
+
+
+
+## **FIGURE 4**
+
+### Data preparation
+
+Trophic guild log-ratios were calculated using [QURRO](https://www.example.com) ([Fedarko et al., 2020](https://doi.org/10.1093/nargab/lqaa023)) by comparing the summed abundances of features assigned to different guilds. As example two comparisons are shown:
+
+- **detritivores** + **fungivores** / **herbivores**
+- **carnivores** / **herbivores** + **fungivores**
+
+```{r}
+# function to remove null log ratios and convert to numeric data type
+CleanUp <- function(rat) {
+  rat<-rat[!rat$Current_Natural_Log_Ratio == "null",]
+  rat$Current_Natural_Log_Ratio<-as.numeric(rat$Current_Natural_Log_Ratio)
+  return(rat)
+}
+
+# load metadata
+met <- read.csv("LUCAS_data/LUCAS_metadata.tsv", header=TRUE, sep="\t", stringsAsFactors = F, check.names = F)
+
+# load log ratios
+R1 <- read.csv("LUCAS_data/Ratio_FunDet_VS_Her.tsv", header=TRUE, sep="\t", stringsAsFactors = F, check.names = F)
+R2 <- read.csv("LUCAS_data/Ratio_Car_VS_HerFun.tsv", header=TRUE, sep="\t", stringsAsFactors = F, check.names = F)
+
+# clean up
+R_1 <- CleanUp(R1[,1:2])
+R_2 <- CleanUp(R2[,1:2])
+
+df_1 <- merge(R_1,met, by = "SampleID")
+df_2 <- merge(R_2,met, by = "SampleID")
+
+df_1$Antrop<-factor(df_1$Antrop, levels=c("Natural", "Antropic"))
+df_2$Antrop<-factor(df_2$Antrop, levels=c("Natural", "Antropic"))
+
+df_1$LC_simpl_2018<-factor(df_1$LC_simpl_2018,levels=c("Woodland", "Grassland", "Cropland"))
+df_2$LC_simpl_2018<-factor(df_2$LC_simpl_2018,levels=c("Woodland", "Grassland", "Cropland"))
+
+```
+
+### **Figure 4A,B,C,D**
+
+```{r}
+# Calculate sample size per group
+group_n <- table(df_1$Antrop)
+# Create labels including sample size
+group_labels <- c(
+  "Antropic" = paste0("Antropic\n(n = ", group_n["Antropic"], ")"),
+  "Natural" = paste0("Natural\n(n = ", group_n["Natural"], ")"))
+f4a<-ggboxplot(df_1, x = "Antrop", y = "Current_Natural_Log_Ratio",
+          color = "Antrop", palette = "jco", add = "jitter",
+          title = "",
+          legend = "right") + xlab("") + ylab("Natural log ratio") +
+  stat_compare_means(method = "wilcox.test",
+                     label.x = 1.38) +
+  scale_color_manual(values=c("Antropic"="#D55E00","Natural"="#0072B2")) +
+  scale_x_discrete(labels = group_labels) +
+  theme(legend.title = element_blank(),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 18),
+        axis.text.x = element_text(size = 18),
+        axis.text.y = element_text(size = 12))
+
+# Calculate sample size per group
+group_n <- table(df_2$Antrop)
+# Create labels including sample size
+group_labels <- c(
+  "Antropic" = paste0("Antropic\n(n = ", group_n["Antropic"], ")"),
+  "Natural" = paste0("Natural\n(n = ", group_n["Natural"], ")"))
+f4b<-ggboxplot(df_2, x = "Antrop", y = "Current_Natural_Log_Ratio",
+          color = "Antrop", palette = "jco", add = "jitter",
+          title = "",
+          legend = "right") + xlab("") + ylab("Natural log ratio") +
+  stat_compare_means(method = "wilcox.test",
+                     label.x = 1.38) +
+  scale_color_manual(values=c("Antropic"="#D55E00","Natural"="#0072B2")) +
+  scale_x_discrete(labels = group_labels) +
+  theme(legend.title = element_blank(),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 18),
+        axis.text.x = element_text(size = 18),
+        axis.text.y = element_text(size = 12))
+
+
+group_n <- table(df_1$LC_simpl_2018)
+# Create labels including sample size
+group_labels <- c(
+  "Woodland" = paste0("Woodland\n(n = ", group_n["Woodland"], ")"),
+  "Grassland" = paste0("Grassland\n(n = ", group_n["Grassland"], ")"),
+  "Cropland" = paste0("Cropland\n(n = ", group_n["Cropland"], ")"))
+my_comparisons <- list( c("Woodland", "Grassland"), c("Woodland", "Cropland"), c("Grassland", "Cropland") )
+f4c<-ggboxplot(df_1, x = "LC_simpl_2018", y = "Current_Natural_Log_Ratio",
+          color = "LC_simpl_2018", palette = "jco", add = "jitter",
+          title = "",
+          legend = "right") + xlab("") + ylab("Natural log ratio") +
+  stat_compare_means(comparisons = my_comparisons, method = "wilcox.test") +
+  scale_color_manual(values=c("Cropland"="#E7298A","Grassland"="#E6AB02","Woodland"="#33A02C")) +
+  scale_x_discrete(labels = group_labels) +
+  theme(legend.title = element_blank(),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 18),
+        axis.text.x = element_text(size = 18),
+        axis.text.y = element_text(size = 12))
+
+group_n <- table(df_2$LC_simpl_2018)
+# Create labels including sample size
+group_labels <- c(
+  "Woodland" = paste0("Woodland\n(n = ", group_n["Woodland"], ")"),
+  "Grassland" = paste0("Grassland\n(n = ", group_n["Grassland"], ")"),
+  "Cropland" = paste0("Cropland\n(n = ", group_n["Cropland"], ")"))
+f4d<-ggboxplot(df_2, x = "LC_simpl_2018", y = "Current_Natural_Log_Ratio",
+          color = "LC_simpl_2018", palette = "jco", add = "jitter",
+          title = "",
+          legend = "right") + xlab("") + ylab("Natural log ratio") +
+  stat_compare_means(comparisons = my_comparisons, method = "wilcox.test") +
+  scale_color_manual(values=c("Cropland"="#E7298A","Grassland"="#E6AB02","Woodland"="#33A02C")) +
+  scale_x_discrete(labels = group_labels) +
+  theme(legend.title = element_blank(),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 18),
+        axis.text.x = element_text(size = 18),
+        axis.text.y = element_text(size = 12))
+
+
+fig4_top<-ggarrange(
+  ggarrange(f4a,f4b, nrow=1, legend="none"),
+  ggarrange(f4c,f4d, nrow=1, legend="none"),
+  nrow=2
+)
+
+
+```
+
+
+### **Figure 4E,F**
+
+```{r}
+# 75 LUCAS samples shared an identical bulk density value (1.067405006), while no other sample shared identical values. These samples were therefore considered artifactual and removed
+ddf_1<-df_1[df_1$Bulk_density!=1.067405006,]
+ddf_2<-df_2[df_2$Bulk_density!=1.067405006,]
+# Also 1 samples with bulk density value (4.55) more than twice the maximum of other samples is considered an outlier and removed
+ddf_1<-ddf_1[ddf_1$Bulk_density<1.8,]
+ddf_2<-ddf_2[ddf_2$Bulk_density<1.8,]
+# Extract only woodland samples
+ddf_1<-ddf_1[ddf_1$LC_simpl_2018=="Woodland",]
+ddf_2<-ddf_2[ddf_2$LC_simpl_2018=="Woodland",]
+
+f4e<-ggscatter(ddf_1, x = "Bulk_density", y = "Current_Natural_Log_Ratio",
+          add = "loess",                         # Add regression line
+          conf.int = TRUE,
+          title = "") +
+  stat_cor(label.y = 10) + 
+  ylab("Natural log ratio") + xlab(expression("Bulk density (g/" * cm^3 * ")")) +
+  theme(
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 18),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+f4f<-ggscatter(ddf_2, x = "Bulk_density", y = "Current_Natural_Log_Ratio",
+          add = "loess",                         # Add regression line
+          conf.int = TRUE,
+          title = "") +
+  stat_cor(label.y = 1) + 
+  ylab("Natural log ratio") + xlab(expression("Bulk density (g/" * cm^3 * ")")) +
+  theme(
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 18),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+
+
+fig4_bottom<-ggarrange(f4e,f4f,ncol=2, legend="none")
+
+```
+
+### **Figure 4 complete**
+
+```{r, fig.width=21*0.7, fig.height=(0.8*29.7)*0.7, out.width="100%"}
+fig4<-ggarrange(fig4_top,fig4_bottom,nrow=2, heights = c(2,1))
+
+print(fig4)
+
+ggsave("Figures/Figure_4.pdf", plot = fig4, device="pdf", scale=1.8, 
+       width = 180, height = (0.8*297)/210*180, units = "mm", bg="white")
+
+
+```
+
+
+
+## **Supplementary figure 1**
+
+```{r, fig.width=21*0.5, fig.height=29.7*0.5, out.width="100%"}
+
+
+dat <- read.table("INVGuild.tsv", header=TRUE, sep="\t", stringsAsFactors = F, check.names = F)
+data <- dat[,c(1,4,5)]
+data <- data[!is.na(data$Taxonomic_level),]
+data <- data[!is.na(data$Ecology),]
+
+desired_order <- rev(c("Class", "Order", "Family", "Genus", "Species"))
+
+data$Taxonomic_level <- factor(
+  data$Taxonomic_level,
+  levels = desired_order
+)
+level_counts <- data %>%
+  count(Taxonomic_level)
+x_labels <- setNames(
+  paste0(level_counts$Taxonomic_level, "\n\n(",
+         level_counts$n, ")"),
+  level_counts$Taxonomic_level
+)
+sf1a<-ggplot(data, aes(x = Taxonomic_level, fill = Ecology)) +
+  geom_bar(position = "fill") +
+  labs(x = "",y = "",fill = "") + 
+  scale_x_discrete(labels = x_labels) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.text = element_text(size = 14))
+
+
+phyla <- c("Annelida", "Arthropoda", "Nematoda",
+           "Rotifera", "Tardigrada")
+data_filtered <- data %>%
+  mutate(Phylum = str_extract(Taxon, "(?<=p__)[^;]+")) %>%
+  filter(Phylum %in% phyla)
+data_filtered$Phylum <- factor(
+  data_filtered$Phylum,
+  levels = phyla
+)
+level_counts2 <- data_filtered %>%
+  count(Phylum)
+x_labels2 <- setNames(
+  paste0(level_counts2$Phylum, "\n\n(",
+         level_counts2$n, ")"),
+  level_counts2$Phylum
+)
+sf1b<-ggplot(data_filtered, aes(x = Phylum, fill = Ecology)) +
+  geom_bar(position = "fill") + 
+  scale_x_discrete(labels = x_labels2) +
+  labs(x = "",y = "",fill = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.text = element_text(size = 14))
+
+sfig1<-ggarrange(sf1a,sf1b, nrow = 2)
+
+print(sfig1)
+
+ggsave("Figures/Supplementary_Figure_1.pdf", plot=sfig1, device="pdf", scale=1.2, 
+       width = 180, height = 297/210*180, units = "mm", bg="white")
+
+
+```
+
+
+
+## **Supplementary Figure 2**
+
+```{r, fig.width=21*0.7, fig.height=14.8*0.7, out.width="100%"}
+# # Diversity of taxa in Antropic VS Natural
+# tt <- SplitTableBySampleMetadataColumn(tab,met,"Antrop")
+# tt_01 <- MakeBinary(tt)
+# ll<-tt_01
+# outl<-list()
+# for (i in 1:length(ll)) {
+#  df <- ll[[i]]
+#  tbl_01 <- SplitTableByFeatureMetadataColumn(df, tmtd[tmtd$TaxGroup %in% Names_Taxa,], "TaxGroup")
+#  minCol=min(sapply(tbl_01, ncol))
+#  res <- iNEXT(tbl_01, q=c(0,2), datatype = "incidence_raw",
+#               endpoint = 2*minCol, knots = 40,
+#               se = TRUE, conf = 0.95, nboot = 500)
+#  outl[[i]] <- res
+# }
+# names(outl)<-names(ll)
+# saveRDS(outl,"RDSs/iNEXT_FullTableByAntrop_ByTaxa.rds")
+iNEXT_FullTableByAntrop_ByTaxa <- readRDS("RDSs/iNEXT_FullTableByAntrop_ByTaxa.rds")
+
+# # Diversity of guilds in Antropic VS Natural
+# tbl<-tab[row.names(tab) %in% fmtd$Feature.ID,]
+# tt <- SplitTableBySampleMetadataColumn(tbl,met,"Antrop")
+# tt_01 <- MakeBinary(tt)
+# ll<-tt_01
+# outl<-list()
+# for (i in 1:length(ll)) {
+#  df <- ll[[i]]
+#  tbl_01 <- SplitTableByFeatureMetadataColumn(df, fmtd, "guild")
+#  minCol=min(sapply(tbl_01, ncol))
+#  res <- iNEXT(tbl_01, q=c(0,2), datatype = "incidence_raw",
+#               endpoint = 2*minCol, knots = 40,
+#               se = TRUE, conf = 0.95, nboot = 500)
+#  outl[[i]] <- res
+# }
+# names(outl)<-names(ll)
+# saveRDS(outl,"RDSs/iNEXT_FullTableByAntrop_ByGuild.rds")
+iNEXT_FullTableByAntrop_ByGuild <- readRDS("RDSs/iNEXT_FullTableByAntrop_ByGuild.rds")
+
+
+# Supplementary figure 2A,B
+dd<-iNEXT_FullTableByAntrop_ByTaxa
+plts_1<-list()
+for(i in 1:length(dd)) {
+  plts_1[[i]]<-ggiNEXT(dd[[i]], type = 1,
+                       facet.var = "Order.q", color.var = "Assemblage",
+                       se = TRUE, grey = FALSE) +
+    xlab("Number of samples") + ylab("") +
+    facet_wrap(~Order.q, scales="free",
+               labeller = labeller(
+                 Order.q = c("0" = "Richness","2" = "1/Simpson"))) +
+    theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 12),
+          axis.title.x = element_text(size = 14),
+          strip.text = element_text(size = 14),
+          legend.text = element_text(size = 14)) +
+    guides(shape = "none", linetype = "none") +
+    scale_color_brewer(palette = "Set2") +
+    scale_fill_brewer(palette = "Set2")
+    scale_shape_manual(values = rep(16,5))
+}
+
+# Supplementary figure 2C,D
+dd<-iNEXT_FullTableByAntrop_ByGuild
+plts_2<-list()
+for(i in 1:length(dd)) {
+  plts_2[[i]]<-ggiNEXT(dd[[i]], type = 1,
+                       facet.var = "Order.q", color.var = "Assemblage",
+                       se = TRUE, grey = FALSE) +
+    xlab("Number of samples") + ylab("") +
+    facet_wrap(~Order.q, scales="free",
+               labeller = labeller(
+                 Order.q = c("0" = "Richness","2" = "1/Simpson"))) +
+    theme(axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size = 12),
+          axis.title.x = element_text(size = 14),
+          strip.text = element_text(size = 14),
+          legend.text = element_text(size = 14)) +
+    guides(shape = "none", linetype = "none") +
+    scale_color_hue() +
+    scale_fill_hue() +
+    scale_shape_manual(values = rep(16,7))
+}
+
+
+# Supplementary figure 2 complete
+sfig2 <- ggarrange(
+  ggarrange(plts_1[[2]],plts_1[[1]], ncol=2, common.legend = T, legend = "right"),
+  ggarrange(plts_2[[2]],plts_2[[1]], ncol=2, common.legend = T, legend = "right"),
+  nrow=2)
+
+print(sfig2)
+
+ggsave("Figures/Supplementary_Figure_2.pdf", plot = sfig2, device="pdf", scale=2, 
+       width = 180, height = 148/210*180, units = "mm", bg="white")
+
+
+```
+
+
+
+## **Supplementary Figure 3**
+
+```{r, fig.width=21*0.7, fig.height=(2/7*29.7)*0.7, out.width="100%"}
+
+arrPlts_s3a<-ggarrange(plotlist = plts_3a[6:7], ncol=1, nrow=2, common.legend=TRUE, legend = "bottom")
+arrPlts_s3b<-ggarrange(plotlist = plts_3b[6:7], ncol=1, nrow=2, common.legend=TRUE, legend = "bottom")
+arrPlts_s3c<-ggarrange(plotlist = plts_3c[6:7], ncol=1, nrow=2, common.legend=TRUE, legend = "bottom")
+
+sfig3 <- ggarrange(arrPlts_s3a,arrPlts_s3b,arrPlts_s3c, ncol=3, legend = "bottom")
+
+print(sfig3)
+
+ggsave("Figures/Supplementary_Figure_3.pdf", plot = sfig3, device="pdf", scale=1.8, 
+       width = 180, height = (2/7*297)/210*180, units = "mm", bg="white")
+
+
+```
+
+
+
+
+
