@@ -20,7 +20,7 @@ JOBS=32
 
 #### 2.1. Import, reverse transcribe and clean sequences from [SILVA v.138.1](https://www.arb-silva.de/)
 ```bash
-# activate qiime2 evironment
+# activate qiime2 environment
 conda activate qiime2-amplicon-2024.10
 
 # import sequences
@@ -39,7 +39,7 @@ qiime rescript reverse-transcribe \
   --i-rna-sequences silva-138.1-ssu-nr99-rna-seqs.qza \
   --o-dna-sequences silva-138.1-ssu-nr99-seqs.qza
 
-# remove low quality sequences (5+ degenerated bases, homopolymers with 8+ bases)
+# remove low quality sequences (5+ degenerate bases, homopolymers with 8+ bases)
 qiime rescript cull-seqs \
   --i-sequences silva-138.1-ssu-nr99-seqs.qza \
   --p-num-degenerates 5 \
@@ -179,7 +179,7 @@ multiqc ${RAWDIR}/FastQC_results
 See *multiqc_report.html*
 
 ⚠️
-There are illumina universal adapters in the reads that needs to be removed
+There are Illumina universal adapters in the reads that needs to be removed
 
 ---
 
@@ -190,10 +190,12 @@ The downloaded paired-end reads are named following this scheme: "Lucas\<sampleI
 
 ```bash
 # get absolute path of reads
-ls -1 ${RAWDIR}/*1.fq.gz > R1.txt
-ls -1 ${RAWDIR}/*2.fq.gz > R2.txt
+ls -1 ${RAWDIR}/*1.fq.gz > ${RAWDIR}/R1.txt
+ls -1 ${RAWDIR}/*2.fq.gz > ${RAWDIR}/R2.txt
 # get identifiers
-ls ${RAWDIR}/*fq.gz | cut -c 1-9 | sort | uniq > ${RAWDIR}/ids.txt
+for f in "${RAWDIR}"/*fq.gz; do
+    basename "$f"
+done | cut -c 1-9 | sort -u > "${RAWDIR}/ids.txt"
 # make manifest file
 paste ${RAWDIR}/ids.txt ${RAWDIR}/R1.txt ${RAWDIR}/R2.txt > ${RAWDIR}/man.txt
 echo sample-id$'\t'forward-absolute-filepath$'\t'reverse-absolute-filepath > ${RAWDIR}/manifest.tsv
@@ -346,6 +348,10 @@ qiime taxa filter-table \
   --i-taxonomy taxonomy.qza \
   --p-include 'd__Eukaryota(Metazoa)' \
   --o-filtered-table table.qza
+qiime rescript filter-taxa \
+  --i-taxonomy taxonomy.qza \
+  --p-include 'd__Eukaryota(Metazoa)' \
+  --o-filtered-taxonomy taxonomy.qza
 
 # export table (ASVs abundance per sample)
 qiime tools export \

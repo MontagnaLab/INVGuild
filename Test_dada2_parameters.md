@@ -1,36 +1,54 @@
-This code is for comparing the output of q2-dada2 runs using different parameters to select the best parameters combination. Assuming that q2-dada2 output files are named like this (<run.id> represent the variable part of the filename identifing the different runs):
+This code is for comparing the output of q2-dada2 runs using different parameters to select the best combination of parameters. Assuming that q2-dada2 output files are named like this (<run.id> represents the variable part of the filename identifing the different runs):
 - denoising-stats_<run.id>.qza
 - table_<run.id>.qza
 - rep-seqs_<run.id>.qza
 
+Export files.
 ```bash
-# Export files
-tmpdir="tmp_${TLF}_${TLR}"
-mkdir -p "$tmpdir"
-
-qiime tools export --input-path "denoising-stats_${TLF}_${TLR}.qza" --output-path "$tmpdir/exported_stats"
-cp "${tmpdir}/exported_stats/stats.tsv" "denoising-stats_${TLF}_${TLR}.tsv"
-
-qiime tools export --input-path "table_${TLF}_${TLR}.qza" --output-path "$tmpdir/exported_table"
-biom convert -i "$tmpdir/exported_table/feature-table.biom" -o "table_${TLF}_${TLR}.tsv" --to-tsv
-
-qiime tools export --input-path "rep-seqs_${TLF}_${TLR}.qza" --output-path "$tmpdir/exported_seqs"
-cp "${tmpdir}/exported_seqs/dna-sequences.fasta" "rep-seqs_${TLF}_${TLR}.fasta"
-
-rm -r "$tmpdir"
+for stats_file in denoising-stats_*.qza; do
+    # Extract run ID
+    RUN_ID="${stats_file#denoising-stats_}"
+    RUN_ID="${RUN_ID%.qza}"
+    # Export files
+    tmpdir="tmp_${RUN_ID}"
+    mkdir -p "$tmpdir"
+    # Export stats
+    qiime tools export \
+        --input-path "$stats_file" \
+        --output-path "$tmpdir/exported_stats"
+    cp "${tmpdir}/exported_stats/stats.tsv" \
+       "denoising-stats_${RUN_ID}.tsv"
+    # Export table
+    qiime tools export \
+        --input-path "table_${RUN_ID}.qza" \
+        --output-path "$tmpdir/exported_table"
+    biom convert \
+        -i "$tmpdir/exported_table/feature-table.biom" \
+        -o "table_${RUN_ID}.tsv" \
+        --to-tsv
+    # Export seqs
+    qiime tools export \
+        --input-path "rep-seqs_${RUN_ID}.qza" \
+        --output-path "$tmpdir/exported_seqs"
+    cp "${tmpdir}/exported_seqs/dna-sequences.fasta" \
+       "rep-seqs_${RUN_ID}.fasta"
+    # Remove temporary directory
+    rm -r "$tmpdir"
+done
 
 
 ```
 
 R script for comparing different dada2 runs.
-- PLOT1 compare percentges of reads retained per sample at each step of the dada2 algorithm
-- PLOT2 compare ASV sequence lengths for evaluating retained amplicon size
+- PLOT1 compares percentages of reads retained per sample at each step of the dada2 algorithm
+- PLOT2 compares ASV sequence lengths for evaluating retained amplicon size
 
 ```bash
 R
 
 library(tidyr)
 library(dplyr)
+library(ggplot2)
 library(ggpubr)
 library(Biostrings)
 library(plotly)
@@ -55,12 +73,14 @@ for (fil in list.files(pattern = "denoising-stats_.*tsv")) {
 names(dat_list) <- sub("^[^_]+_([^\\.]+)\\.tsv$", "\\1",
                        list.files(pattern = "denoising-stats_.*tsv"))
 
+
+
+
+
 df <- bind_rows(dat_list, .id = "source_df")
 df$value<-as.numeric(df$value)
 
-# define comparisons and columns of interest
-my_comparisons<-combn(unique(df$source_df), 2, simplify = FALSE)
-
+# define columns of interest
 ToPlot<-c("percentage.of.input.passed.filter",
           "percentage.of.input.merged",
           "percentage.of.input.non.chimeric")
@@ -84,7 +104,7 @@ ggarrange(plotlist = plts, ncol=3)
 # read data
 SeqsLengthTotalData<-list()
 SeqsLengthPerSample<-list()
-for (fil in list.files(pattern="^table_[0-9_]+\\.tsv$")) {
+for (fil in list.files(pattern="^table_.*\\.tsv$")) {
   id <- sub("^table_(.*)\\.tsv$", "\\1", fil)
   
   # read table
@@ -102,7 +122,7 @@ for (fil in list.files(pattern="^table_[0-9_]+\\.tsv$")) {
   counts <- counts[shared_features, , drop = FALSE]
   seq_lengths <- seq_lengths[shared_features]
   
-  # save length of each seqs in total data
+  # save the length of each seqs in total data
   seq_lengths2<-as.data.frame(seq_lengths)
   seq_lengths2$ASV<-row.names(seq_lengths2)
   SeqsLengthTotalData[[id]]<-seq_lengths2

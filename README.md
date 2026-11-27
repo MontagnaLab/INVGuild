@@ -7,7 +7,7 @@
 
 Understanding ecosystem functioning goes beyond identifying which species are present to determining the functional roles they fulfil within the ecosystem. Traditional taxonomic diversity metrics often fall short in capturing ecological dynamics. Functional diversity, by contrast, reflects ecological processes more directly. However, assigning functional roles to invertebrates in large-scale surveys is notoriously difficult.
 
-**INVGuild** support the consideraton of fuctional roles of taxa in biodiversity surveys by offering a **curated and structured database** that enables the assignment of invertebrate taxa to one of **seven trophic guilds (bacterivores, carnivores, detritivores, fungivores, herbivores, microbivores, omnivores)**.
+**INVGuild** supports the consideration of functional roles of taxa in biodiversity surveys by offering a **curated and structured database** that enables the assignment of invertebrate taxa to one of **seven trophic guilds (bacterivores, carnivores, detritivores, fungivores, herbivores, microbivores, omnivores)**.
 
 ## Scope and Development
 
@@ -15,9 +15,9 @@ The [INVGuild database](INVGuild.tsv) was developed from a curated list of terre
 
 To ensure reliability:
 
-* Taxa names were standardized following NCBI taxonomy.
+* Taxa names were standardized according to NCBI taxonomy.
 * Invalid or unrecognized names were excluded.
-* Trophic roles were assigned to taxa based on accurate literature review.
+* Trophic roles were assigned to taxa based on an accurate literature review.
 * Assignments were made only when trophic roles were consistent across all members of a taxonomic group.
 
 ## Database Contents
@@ -29,12 +29,12 @@ To ensure reliability:
   * 8 orders
   * 3 classes
 
-* Including representatives of **21 invertebrate classes**, **76 orders**, **387 families**
-* **587 bibliographic sources** support trophic assignments
-* For each entry besides the assigned **trophic guild** also the **NCBI taxonomy ID**, the **synonyms**, the **taxonomic level of the assignment**, the **bibliographic references**, and some **ecological notes** are reported.
+* representatives of **21 invertebrate classes**, **74 orders**, **384 families**
+* **580 bibliographic sources** supporting trophic assignments
+* for each entry besides the assigned **trophic guild** also the **NCBI taxonomy ID**, the **synonyms**, the **taxonomic level of the assignment**, the **bibliographic references**, and some **ecological notes** are reported.
 
 ## How to use INVGuild
-This tutorial explains how to use a simple R script to assign trophic guilds to a list of invertebrate taxa using INVGuild.
+This tutorial explains how to use an R script to assign trophic guilds to a list of invertebrate taxa using INVGuild. It also provides instructions for handling taxa exhibiting dietary shifts during their life cycle.
 
 [tutorial (html version)](https://MontagnaLab.github.io/INVGuild/INVGuild_TrophicGuildAssignment.html)
 
@@ -45,12 +45,14 @@ People interested in contributing to **INVGuild** development are encouraged to 
 
 ## Citation
 
+**INVGuild** DOI: [https://doi.org/10.6084/m9.figshare.32089065](https://doi.org/10.6084/m9.figshare.32089065)
+
 If you use INVGuild in your work, please cite the corresponding publication:
 
 > *Under evaluation*.
 
 ## Code and reproducibility
-Code used for the analyses presented in the INVGuild study (*under evaluation*) are available here:
+The code used for the analyses presented in the INVGuild study (*under evaluation*) is available here:
 
 - [Code for bioinformatic analysis](LUCAS_Bioinformatic_Pipeline.md)
 - [Code for diversity analysis and figure production (html version)](https://MontagnaLab.github.io/INVGuild/LUCAS_analysis_and_figures.html)

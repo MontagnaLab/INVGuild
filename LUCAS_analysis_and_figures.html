@@ -1572,15 +1572,14 @@ analysis</strong></h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(iNEXT)</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(ggpubr)</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(scales)</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">library</span>(RColorBrewer)</span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="fu">library</span>(scales)</span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="fu">library</span>(multcompView)</span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="fu">library</span>(stringr)</span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="fu">library</span>(rstatix)</span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="fu">library</span>(ggsignif)</span></code></pre></div>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(RColorBrewer)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">library</span>(scales)</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="fu">library</span>(multcompView)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="fu">library</span>(stringr)</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="fu">library</span>(rstatix)</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="fu">library</span>(ggsignif)</span></code></pre></div>
 </div>
 <div id="prepare-the-data" class="section level2">
 <h2><strong>Prepare the data</strong></h2>
@@ -1647,7 +1646,7 @@ corresponding to the names in the table)</li>
 <li>MetColumn: the name of a metadata column to be used for
 grouping</li>
 </ul>
-<p>return a list of tables splitted by the metadata column values.</p>
+<p>return a list of tables split by the metadata column values.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>SplitTableBySampleMetadataColumn <span class="ot">&lt;-</span> <span class="cf">function</span>(OriginalTable, Metadata, MetColumn) {</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="co"># merge (transposed) table and metadata</span></span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  df <span class="ot">&lt;-</span> <span class="fu">merge</span>(Metadata,<span class="fu">as.data.frame</span>(<span class="fu">t</span>(OriginalTable)), <span class="at">by.x =</span> <span class="dv">1</span>, <span class="at">by.y =</span> <span class="st">&quot;row.names&quot;</span>)</span>
@@ -1674,7 +1673,7 @@ corresponding to the rownames of the table)</li>
 <li>MetColumn: the name of a metadata column to be used for
 grouping</li>
 </ul>
-<p>return a list of abundance tables splitted by the metadata column
+<p>return a list of abundance tables split by the metadata column
 values.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>SplitTableByFeatureMetadataColumn <span class="ot">&lt;-</span> <span class="cf">function</span>(OriginalTable, Metadata, MetColumn) {</span>
 <span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="co"># merge (transposed) table and metadata</span></span>
@@ -2213,14 +2212,14 @@ presence-absence tables.</p>
 <h2><strong>FIGURE 4</strong></h2>
 <div id="data-preparation-2" class="section level3">
 <h3>Data preparation</h3>
-<p>Trophic guild log-ratios were calculated using <a href="https://www.example.com">QURRO</a> (<a href="https://doi.org/10.1093/nargab/lqaa023">Fedarko et al., 2020</a>)
+<p>Trophic guild log-ratios were calculated using <a href="https://github.com/biocore/qurro">QURRO</a> (<a href="https://doi.org/10.1093/nargab/lqaa023">Fedarko et al., 2020</a>)
 by comparing the summed abundances of features assigned to different
-guilds. As example two comparisons are shown:</p>
+guilds. As examples, two comparisons are shown:</p>
 <ul>
-<li><strong>detritivores</strong> + <strong>fungivores</strong> /
+<li>(<strong>detritivores</strong> + <strong>fungivores</strong>) /
 <strong>herbivores</strong></li>
-<li><strong>carnivores</strong> / <strong>herbivores</strong> +
-<strong>fungivores</strong></li>
+<li><strong>carnivores</strong> / (<strong>herbivores</strong> +
+<strong>fungivores</strong>)</li>
 </ul>
 <div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" tabindex="-1"></a><span class="co"># function to remove null log ratios and convert to numeric data type</span></span>
 <span id="cb29-2"><a href="#cb29-2" tabindex="-1"></a>CleanUp <span class="ot">&lt;-</span> <span class="cf">function</span>(rat) {</span>

@@ -18,7 +18,6 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 library(iNEXT)
 library(ggplot2)
 library(ggpubr)
-library(scales)
 library(RColorBrewer)
 library(scales)
 library(dplyr)
@@ -94,7 +93,7 @@ Given:
 - Metadata: sample metadata (with the first column with sample names corresponding to the names in the table)
 - MetColumn: the name of a metadata column to be used for grouping
 
-return a list of tables splitted by the metadata column values.
+return a list of tables split by the metadata column values.
 
 ```{r}
 SplitTableBySampleMetadataColumn <- function(OriginalTable, Metadata, MetColumn) {
@@ -123,7 +122,7 @@ Given:
 - Metadata: feature metadata (with the first column with feature names corresponding to the rownames of the table)
 - MetColumn: the name of a metadata column to be used for grouping
 
-return a list of abundance tables splitted by the metadata column values.
+return a list of abundance tables split by the metadata column values.
   
 ```{r}
 
@@ -743,10 +742,10 @@ ggsave("Figures/Figure_3.pdf", plot = fig3, device="pdf", scale=1.8,
 
 ### Data preparation
 
-Trophic guild log-ratios were calculated using [QURRO](https://www.example.com) ([Fedarko et al., 2020](https://doi.org/10.1093/nargab/lqaa023)) by comparing the summed abundances of features assigned to different guilds. As example two comparisons are shown:
+Trophic guild log-ratios were calculated using [QURRO](https://github.com/biocore/qurro) ([Fedarko et al., 2020](https://doi.org/10.1093/nargab/lqaa023)) by comparing the summed abundances of features assigned to different guilds. As examples, two comparisons are shown:
 
-- **detritivores** + **fungivores** / **herbivores**
-- **carnivores** / **herbivores** + **fungivores**
+- (**detritivores** + **fungivores**) / **herbivores**
+- **carnivores** / (**herbivores** + **fungivores**)
 
 ```{r}
 # function to remove null log ratios and convert to numeric data type

@@ -87,7 +87,7 @@ db <- db_new
 
 
 ## **Clean and Prepare the Database**
-Prepare INVGuild for taxonomic assignment by removing entries with missing information (those recorded in INVGuild but with missing trophic guild classification), cleaning taxonomic strings, partitioning the database into subsets according to the taxonomic level at which guild assignments were made, and extracting the relevant information for each taxonomic level.
+Prepare INVGuild for trophic guild assignment by removing entries with missing information (those recorded in INVGuild but with missing trophic guild classification), cleaning taxonomic strings, partitioning the database into subsets according to the taxonomic level at which guild assignments were made, and extracting the relevant information for each taxonomic level.
 
 ```{r}
 # Remove empty entries
@@ -118,35 +118,40 @@ TaxToBeAssigned <- tax %>%
 res <- TaxToBeAssigned %>%
   left_join(db_list$Species %>% select(last_part, Ecology), by = "last_part")
 Assigned$Species <- res %>% filter(!is.na(Ecology))
-TaxToBeAssigned <- res %>% filter(is.na(Ecology))
+TaxToBeAssigned <- res %>% filter(is.na(Ecology)) %>%
+  select(-Ecology)
 
 # Assignment at the genus level
-TaxToBeAssigned <- extract_tax_level(TaxToBeAssigned %>% select(Feature.ID, Taxon, last_part), "g")
+TaxToBeAssigned <- extract_tax_level(TaxToBeAssigned, "g")
 res <- TaxToBeAssigned %>%
   left_join(db_list$Genus %>% select(last_part, Ecology), by = "last_part")
 Assigned$Genus <- res %>% filter(!is.na(Ecology))
-TaxToBeAssigned <- res %>% filter(is.na(Ecology))
+TaxToBeAssigned <- res %>% filter(is.na(Ecology)) %>%
+  select(-Ecology)
 
 # Assignment at the family level
-TaxToBeAssigned <- extract_tax_level(TaxToBeAssigned %>% select(Feature.ID, Taxon, last_part), "f")
+TaxToBeAssigned <- extract_tax_level(TaxToBeAssigned, "f")
 res <- TaxToBeAssigned %>%
   left_join(db_list$Family %>% select(last_part, Ecology), by = "last_part")
 Assigned$Family <- res %>% filter(!is.na(Ecology))
-TaxToBeAssigned <- res %>% filter(is.na(Ecology))
+TaxToBeAssigned <- res %>% filter(is.na(Ecology)) %>%
+  select(-Ecology)
 
 # Assignment at the order level
-TaxToBeAssigned <- extract_tax_level(TaxToBeAssigned %>% select(Feature.ID, Taxon, last_part), "o")
+TaxToBeAssigned <- extract_tax_level(TaxToBeAssigned, "o")
 res <- TaxToBeAssigned %>%
   left_join(db_list$Order %>% select(last_part, Ecology), by = "last_part")
 Assigned$Order <- res %>% filter(!is.na(Ecology))
-TaxToBeAssigned <- res %>% filter(is.na(Ecology))
+TaxToBeAssigned <- res %>% filter(is.na(Ecology)) %>%
+  select(-Ecology)
 
 # Assignment at the class level
-TaxToBeAssigned <- extract_tax_level(TaxToBeAssigned %>% select(Feature.ID, Taxon, last_part), "c")
+TaxToBeAssigned <- extract_tax_level(TaxToBeAssigned, "c")
 res <- TaxToBeAssigned %>%
   left_join(db_list$Class %>% select(last_part, Ecology), by = "last_part")
 Assigned$Class <- res %>% filter(!is.na(Ecology))
-TaxToBeAssigned <- res %>% filter(is.na(Ecology))
+TaxToBeAssigned <- res %>% filter(is.na(Ecology)) %>%
+  select(-Ecology)
 ```
 
 ## **Clean and Export Final Results**
@@ -165,8 +170,8 @@ for (i in 1:length(Assigned)) {
 Assigned_df <- bind_rows(Assigned)
 
 # Export results
-write.table(Assigned_df, "INVGuild_assigned.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
-write.table(TaxToBeAssigned[1:3], "INVGuild_unassigned.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(Assigned_df, "LUCAS_data/INVGuild_assigned.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(TaxToBeAssigned[1:3], "LUCAS_data/INVGuild_unassigned.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
 
 # Check how many entries received a trophic guild assignment
 paste0(round(100*(nrow(Assigned_df) / (nrow(Assigned_df)+nrow(TaxToBeAssigned))),2),
@@ -213,4 +218,4 @@ ggarrange(
 )
 ```
 
-Barplots showing the relative abundance of trophic guilds identified across the full dataset (on the left) and per taxonomic level (on the right). The number of ASVs is reported in parentheses. 
+Barplots showing the proportion of ASVs assigned to different trophic guilds across the full LUCAS dataset (on the left) and per taxonomic level (on the right). The number of ASVs is reported in parentheses. 
